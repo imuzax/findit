@@ -51,6 +51,7 @@ findit/
 │   └── js/             # JavaScript files
 ├── api/                # REST API endpoints
 ├── uploads/            # User uploaded images
+├── database/           # Database schema and logic
 └── docs/               # Project documentation
 ```
 
@@ -78,7 +79,7 @@ findit/
 3. **Import the database:**
    - Open `phpMyAdmin` → `http://localhost/phpmyadmin`
    - Create a new database named `findit`
-   - Import `docs/findit.sql` (if available)
+   - Import `database/findit.sql`
 
 4. **Configure database connection:**
    - Create `includes/config.php`:
