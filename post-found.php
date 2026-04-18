@@ -1,4 +1,5 @@
 <?php
+require_once 'includes/auth_check.php';
 // We can just reuse post-lost.php logic for post-found.php with different text
 require_once 'includes/header.php';
 ?>
