@@ -1,3 +1,44 @@
+<?php
+session_start();
+require_once 'includes/config.php';
+
+$item_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if (!$item_id) {
+    header("Location: index.php");
+    exit;
+}
+
+$stmt = $pdo->prepare("SELECT * FROM items WHERE item_id = ?");
+$stmt->execute([$item_id]);
+$item = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$item) {
+    header("Location: index.php");
+    exit;
+}
+
+$stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE item_id = ? ORDER BY is_primary DESC");
+$stmt->execute([$item_id]);
+$images = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+if (empty($images)) {
+    $images[] = '/assets/img/placeholder.jpg';
+} else {
+    // Remove leading '../' if it exists in the paths
+    foreach ($images as &$path) {
+        $path = preg_replace('/^\.\.\//', '', $path);
+    }
+}
+
+$isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $item['user_id'];
+$isLoggedIn = isset($_SESSION['user_id']);
+$isResolved = in_array($item['status'], ['returned', 'recovered']);
+$isLost = $item['type'] === 'lost';
+
+$themeColorClass = $isLost ? 'text-[#F4A261]' : 'text-secondary';
+$themeBgClass = $isLost ? 'bg-[#F4A261]/10' : 'bg-secondary/10';
+$themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
+?>
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
@@ -90,85 +131,184 @@
 <!-- Left: Image Gallery -->
 <div class="lg:col-span-7 flex flex-col gap-6">
 <div class="w-full aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
-<img alt="Main item image" class="w-full h-full object-cover" data-alt="Close up photography of a vintage leather satchel bag sitting on a wooden bench in soft natural light, detailed texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWr0p-Da8X1cqaE6f4lyC1qsK4DLDNkR9o7v_uIktH8uB0uoBN2cbSHQZtJwcw3d8vF0Fvmy4fzz1erwd1vKR_cmltA-XpuEDlbnfPM6RZEH7YX-TEsA2cL-_aX-F8syDm5f5zfMTfr8IecdbMKc4DcqNK1GgzPbJgoCX2ozQLEdS7EuYWZSM-iMxwIcxDPZrDes4KavvrYg31b1KTehdMwc_joERdab3dtVCnIrSF3C0dqr9-IdAEyOM5cUENXaQF3vRO734hVWIM"/>
+<img id="main-image" alt="Main item image" class="w-full h-full object-cover" src="<?= htmlspecialchars($images[0]) ?>"/>
 </div>
 <!-- Thumbnails -->
+<?php if (count($images) > 1): ?>
 <div class="grid grid-cols-4 gap-4">
-<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low ring-2 ring-primary cursor-pointer">
-<img alt="Thumbnail 1" class="w-full h-full object-cover opacity-100" data-alt="Close up photography of a vintage leather satchel bag sitting on a wooden bench in soft natural light, detailed texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEJwLxAj_NjKZfe_avIIMM9ZeZoZdFdp8L7lvVikzDMCyji2WxJblUWwRjdgELrEmco74pE3jzAIeM6cy847xgk3RLjhMJRKbDBQmfWuHlQ5blACfRkXyPG-uGH484-tWK934a_7QUyWTTf86r7Hc61naYR_5Fm8E2EkZ_fIDK6BfwDQ1XWQkRBakYOkYcFMZLiYT8LZEtBqYl3C236W-Ak6V7MV0s6kAD4dKmPkSGtnSIMj2A7xj5TWpylfJsxdVQ83ivnXmeWpZg"/>
+    <?php foreach ($images as $index => $img): ?>
+        <div onclick="document.getElementById('main-image').src='<?= htmlspecialchars($img) ?>'" class="aspect-square rounded-lg overflow-hidden bg-surface-container-low <?= $index === 0 ? 'ring-2 ring-primary' : 'hover:opacity-80' ?> cursor-pointer transition-opacity">
+            <img alt="Thumbnail" class="w-full h-full object-cover" src="<?= htmlspecialchars($img) ?>"/>
+        </div>
+    <?php endforeach; ?>
 </div>
-<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low hover:opacity-80 transition-opacity cursor-pointer">
-<img alt="Thumbnail 2" class="w-full h-full object-cover" data-alt="Detail shot showing the brass buckle hardware on a well-worn brown leather satchel bag" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqm2Un-lSn2r0r3L9l6rvE1VVgkPv3VxVj9kYWDvE79_N5A3nLCFhgLUj8O1JKUddSekrztRuT7lqvx-akHxYeso1BeetEzA9FPKIeNtLdpkjIaZR07uyiCzKKMyOXLwddjclQgyRPZfn33jZV_gzEiqKhaMWESPD24USMKm8HLy3p3WK5i70UHF9o06XfSSLI8anuKHm9VlVMgJdQu3YEWP2Jjt5iJrTLEpNUKVPuNHVKXyqDXFC5vaYPMfUf4w3k3as4cmlipacp"/>
-</div>
-<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low hover:opacity-80 transition-opacity cursor-pointer">
-<img alt="Thumbnail 3" class="w-full h-full object-cover" data-alt="Inside view of an empty brown leather satchel showing the canvas lining and an interior zip pocket" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw_tE9BkeEMKyxt3jWJ5SEEosQxws_UXR7qF54naqzKrAH0SbM7gEsj01Xo7eyKIYUIV1jd2lcuXXd4z1ID0jElzbT_BiFKd_62-L-nCropkVgD37MG9IlUNv3SdCCnssFxO54gPPwZxkytpT2OuBDczNaIDbtw29CfHe8-fIROOi2MEsz5afufzwDZ_gR3qEZi8ZnUZFDwWzw4Ha6J8BJvZRoegCCTbH7fAUqwf0B9nAKsxf8OQOyU7HWtIZVaCTyu0Sh7hYiXyYH"/>
-</div>
-<div class="aspect-square rounded-lg overflow-hidden bg-surface-container-low hover:opacity-80 transition-opacity flex items-center justify-center cursor-pointer">
-<span class="material-symbols-outlined text-outline" style="font-size: 2rem;">add_photo_alternate</span>
-</div>
-</div>
+<?php endif; ?>
 </div>
 <!-- Right: Sticky Panel -->
 <div class="lg:col-span-5 relative">
-<div class="sticky top-28 flex flex-col gap-8 bg-surface-container-lowest p-8 rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.06)] border-l-4 border-l-[#F4A261]">
+<div class="sticky top-28 flex flex-col gap-8 bg-surface-container-lowest p-8 rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.06)] border-l-4 <?= $themeLineClass ?>">
 <!-- Status Badge & Meta -->
 <div class="flex items-center justify-between">
-<span class="bg-[#F4A261]/10 text-[#F4A261] px-4 py-1.5 rounded-full text-[0.75rem] font-bold uppercase tracking-wider font-['Inter']">
-                        Lost Item
+<span class="<?= $themeBgClass ?> <?= $themeColorClass ?> px-4 py-1.5 rounded-full text-[0.75rem] font-bold uppercase tracking-wider font-['Inter']">
+                        <?= strtoupper(htmlspecialchars($item['type'])) ?> ITEM
                     </span>
-<span class="text-on-surface-variant text-[0.875rem] font-['Inter']">Reported 2 days ago</span>
+<span class="text-on-surface-variant text-[0.875rem] font-['Inter']">Reported <?= date('M j, Y', strtotime($item['created_at'])) ?></span>
 </div>
 <!-- Title & Description -->
 <div>
-<h1 class="text-[2rem] font-bold font-['Inter'] text-primary tracking-tight leading-tight mb-4">Vintage Leather Satchel</h1>
+<h1 class="text-[2rem] font-bold font-['Inter'] text-primary tracking-tight leading-tight mb-4"><?= htmlspecialchars($item['title']) ?></h1>
 <p class="text-[0.875rem] text-on-surface-variant font-['Inter'] leading-relaxed">
-                        Lost my brown leather satchel near Central Park, possibly around the Bethesda Terrace area. It has distinct brass buckles and a slight scuff mark on the bottom right corner. Contains a notebook and some personal items. Great sentimental value.
+                        <?= nl2br(htmlspecialchars($item['description'])) ?>
                     </p>
-</div>
-<!-- Lifecycle Stepper -->
-<div class="bg-surface-container-low p-6 rounded-lg">
-<h3 class="text-[0.75rem] font-bold uppercase tracking-wider font-['Inter'] text-on-surface-variant mb-6">Status Tracker</h3>
-<div class="relative flex justify-between items-center">
-<div class="absolute left-0 top-1/2 w-full h-[2px] bg-surface-variant -z-10 -translate-y-1/2"></div>
-<div class="absolute left-0 top-1/2 w-1/2 h-[2px] bg-primary -z-10 -translate-y-1/2"></div>
-<div class="flex flex-col items-center gap-2">
-<div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
-<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
-</div>
-<span class="text-[0.75rem] font-semibold font-['Inter'] text-primary">Reported</span>
-</div>
-<div class="flex flex-col items-center gap-2">
-<div class="w-8 h-8 rounded-full bg-surface-container-lowest border-2 border-primary text-primary flex items-center justify-center shadow-sm">
-<span class="material-symbols-outlined text-sm">hourglass_empty</span>
-</div>
-<span class="text-[0.75rem] font-semibold font-['Inter'] text-primary">Matched</span>
-</div>
-<div class="flex flex-col items-center gap-2">
-<div class="w-8 h-8 rounded-full bg-surface-container-highest text-outline flex items-center justify-center">
-<span class="material-symbols-outlined text-sm">handshake</span>
-</div>
-<span class="text-[0.75rem] font-semibold font-['Inter'] text-outline">Claimed</span>
+<div class="mt-4 flex flex-col gap-2">
+    <?php if(!empty($item['category'])): ?>
+    <div class="text-sm"><span class="font-bold">Category:</span> <?= htmlspecialchars($item['category']) ?></div>
+    <?php endif; ?>
+    <?php if(!empty($item['color'])): ?>
+    <div class="text-sm"><span class="font-bold">Color:</span> <?= htmlspecialchars($item['color']) ?></div>
+    <?php endif; ?>
+    <?php if(!empty($item['brand'])): ?>
+    <div class="text-sm"><span class="font-bold">Brand:</span> <?= htmlspecialchars($item['brand']) ?></div>
+    <?php endif; ?>
+    <?php if(!empty($item['date_occurred'])): ?>
+    <div class="text-sm"><span class="font-bold">Date <?= $isLost ? 'Lost' : 'Found' ?>:</span> <?= date('M j, Y', strtotime($item['date_occurred'])) ?></div>
+    <?php endif; ?>
 </div>
 </div>
+<!-- Lifecycle -->
+<?php if ($isResolved): ?>
+<div class="bg-[#c6f6d5] p-6 rounded-lg text-center">
+    <span class="material-symbols-outlined text-4xl text-[#22543d] mb-2">task_alt</span>
+    <h3 class="text-lg font-bold text-[#22543d] uppercase tracking-wider mb-1">Successfully <?= $isLost ? 'Recovered' : 'Returned' ?></h3>
+    <p class="text-sm text-[#276749]">This item has been successfully resolved.</p>
 </div>
+<?php else: ?>
 <!-- Location Map Snippet -->
 <div class="rounded-lg overflow-hidden h-32 relative bg-surface-container-low shadow-sm">
-<img alt="Map location" class="w-full h-full object-cover opacity-60" data-alt="Abstract minimal map view showing Central Park area in light gray tones" data-location="Central Park, NY" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpnUBN9TqDXm9eDr2KXGGFtJ0SR6ofPpEXJYbsO01hY6FteE4IeLBjG9NIjKhrC7LbmEFxAhk6f8hkOt_-zpQVZViW-o3XPM-p40kH2xiUnobDFu343AlVzcuxdSVcz5LH0ZVNXv5D1sNnf1iD2bMiRSwrSAusAr4104oYJREcgFJgmDI4QyWPPxaaKmHEYBbHFw7J1nI-6kyPNxF2OSbs8ZScFtld17H2OMGwNxZiS-uRYBttQKQTuqkRrZc1lFE6lkTK2L2XBouO"/>
+<div class="w-full h-full bg-surface-container-high flex flex-col items-center justify-center opacity-60">
+    <span class="material-symbols-outlined text-4xl text-outline mb-1">map</span>
+</div>
 <div class="absolute inset-0 flex items-center justify-center">
 <div class="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-sm flex items-center gap-2">
 <span class="material-symbols-outlined text-primary text-sm">location_on</span>
-<span class="text-[0.875rem] font-semibold font-['Inter'] text-primary">Near Bethesda Terrace</span>
+<span class="text-[0.875rem] font-semibold font-['Inter'] text-primary"><?= htmlspecialchars($item['location_text']) ?></span>
 </div>
 </div>
 </div>
+<?php endif; ?>
+
 <!-- Primary CTA -->
-<button class="w-full bg-[#F4A261] hover:bg-[#e09152] text-primary font-['Inter'] font-bold py-4 px-6 rounded-DEFAULT transition-all duration-200 active:scale-95 shadow-[0_8px_32px_rgba(13,27,42,0.06)] flex justify-center items-center gap-2">
-<span class="material-symbols-outlined">waving_hand</span>
-                    This Is Mine — Claim Item
-                </button>
+<div id="action-area">
+    <?php if ($isResolved): ?>
+        <button disabled class="w-full bg-surface-variant text-on-surface-variant font-bold py-4 px-6 rounded-DEFAULT shadow-none flex justify-center items-center gap-2 cursor-not-allowed">
+            <span class="material-symbols-outlined">check_circle</span>
+            Already <?= $isLost ? 'Recovered' : 'Returned' ?>
+        </button>
+    <?php elseif ($isOwner): ?>
+        <button onclick="resolveItem(<?= $item_id ?>)" id="resolveBtn" class="w-full bg-secondary hover:bg-[#005a5c] text-on-secondary font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-colors">
+            <span class="material-symbols-outlined">verified</span>
+            Mark as <?= $isLost ? 'Found / Recovered' : 'Returned' ?>
+        </button>
+    <?php elseif (!$isLoggedIn): ?>
+        <a href="auth.php?redirect=item-detail.php?id=<?= $item_id ?>" class="w-full bg-surface-container-high hover:bg-surface-dim text-on-surface font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 text-center transition-colors">
+            <span class="material-symbols-outlined">login</span>
+            Login to Claim / Contact Owner
+        </a>
+    <?php else: ?>
+        <?php if ($isLost): ?>
+            <button onclick="claimItem(<?= $item_id ?>)" id="claimBtn" class="w-full bg-secondary hover:bg-[#005a5c] text-on-secondary font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-colors">
+                <span class="material-symbols-outlined">contact_mail</span>
+                I Found This (Contact Owner)
+            </button>
+        <?php else: ?>
+            <button onclick="claimItem(<?= $item_id ?>)" id="claimBtn" class="w-full bg-[#F4A261] hover:bg-[#e09152] text-primary font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-colors">
+                <span class="material-symbols-outlined">waving_hand</span>
+                This Is Mine — Claim Item
+            </button>
+        <?php endif; ?>
+    <?php endif; ?>
+</div>
+
+<div id="statusMessage" class="hidden mt-4 p-4 rounded-lg font-medium text-center"></div>
+
 </div>
 </div>
 </main>
 <!-- Footer -->
 <?php include 'includes/footer.php'; ?>
+
+<script>
+    async function claimItem(itemId) {
+        const btn = document.getElementById('claimBtn');
+        const statusBox = document.getElementById('statusMessage');
+        
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm" data-icon="progress_activity">progress_activity</span> Processing...`;
+        
+        try {
+            const formData = new FormData();
+            formData.append('item_id', itemId);
+
+            const response = await fetch('api/claim_item.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            statusBox.classList.remove('hidden', 'bg-error-container', 'text-on-error-container', 'bg-[#c6f6d5]', 'text-[#22543d]');
+            
+            if(data.success) {
+                statusBox.classList.add('bg-[#c6f6d5]', 'text-[#22543d]');
+                statusBox.innerText = data.message;
+                btn.style.display = 'none'; // hide button gracefully
+            } else {
+                statusBox.classList.add('bg-error-container', 'text-on-error-container');
+                statusBox.innerText = data.message;
+                btn.disabled = false;
+                btn.innerHTML = `Try Again`;
+            }
+        } catch (error) {
+            statusBox.classList.remove('hidden');
+            statusBox.classList.add('bg-error-container', 'text-on-error-container');
+            statusBox.innerText = "Network Error. Please try again.";
+            btn.disabled = false;
+        }
+    }
+
+    async function resolveItem(itemId) {
+        if(!confirm("Are you sure you want to mark this item as resolved? This cannot be undone.")) return;
+
+        const btn = document.getElementById('resolveBtn');
+        const statusBox = document.getElementById('statusMessage');
+        
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm" data-icon="progress_activity">progress_activity</span> Processing...`;
+        
+        try {
+            const formData = new FormData();
+            formData.append('item_id', itemId);
+
+            const response = await fetch('api/resolve_item.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if(data.success) {
+                window.location.reload();
+            } else {
+                statusBox.classList.remove('hidden');
+                statusBox.classList.add('bg-error-container', 'text-on-error-container');
+                statusBox.innerText = data.message;
+                btn.disabled = false;
+                btn.innerHTML = `Try Again`;
+            }
+        } catch (error) {
+            statusBox.classList.remove('hidden');
+            statusBox.classList.add('bg-error-container', 'text-on-error-container');
+            statusBox.innerText = "Network Error.";
+            btn.disabled = false;
+        }
+    }
+</script>
 </body></html>
