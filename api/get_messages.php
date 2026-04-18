@@ -1,51 +1,41 @@
 <?php
-/**
- * API: Get Messages
- */
+session_start();
+header('Content-Type: application/json');
+
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
 require_once '../includes/config.php';
-require_once '../includes/helpers.php';
-require_once '../includes/auth_check.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    jsonResponse(false, null, 'Invalid request method. Only GET allowed.');
+$user_id = $_SESSION['user_id'];
+$other_id = isset($_GET['other_id']) ? (int)$_GET['other_id'] : 0;
+$item_id = isset($_GET['item_id']) ? (int)$_GET['item_id'] : 0;
+
+if (!$other_id || !$item_id) {
+    echo json_encode(['success' => false, 'message' => 'Missing parameters']);
+    exit;
 }
-
-$userId = $_SESSION['user_id'];
-$otherUserId = filter_input(INPUT_GET, 'other_user_id', FILTER_VALIDATE_INT);
-$itemId = filter_input(INPUT_GET, 'item_id', FILTER_VALIDATE_INT);
-
-// Basic validation
-if (!$otherUserId) {
-    jsonResponse(false, null, 'Other user ID is required.');
-}
-
-$sql = "SELECT m.*, u.full_name as sender_name 
-        FROM messages m 
-        JOIN users u ON m.sender_id = u.user_id 
-        WHERE ((m.sender_id = ? AND m.receiver_id = ?) 
-           OR (m.sender_id = ? AND m.receiver_id = ?))";
-$params = [$userId, $otherUserId, $otherUserId, $userId];
-
-// Optionally filter by item if item context is provided
-if ($itemId) {
-    $sql .= " AND m.item_id = ?";
-    $params[] = $itemId;
-}
-
-$sql .= " ORDER BY m.sent_at ASC";
 
 try {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $messages = $stmt->fetchAll();
+    // Mark messages as read from the other person
+    $stmt = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND item_id = ? AND is_read = 0");
+    $stmt->execute([$other_id, $user_id, $item_id]);
 
-    // Mark as read
-    $markReadStmt = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE receiver_id = ? AND sender_id = ? AND is_read = 0");
-    $markReadStmt->execute([$userId, $otherUserId]);
+    // Fetch the chat history
+    $stmt = $pdo->prepare("
+        SELECT m.*, u.full_name as sender_name 
+        FROM messages m 
+        JOIN users u ON m.sender_id = u.user_id 
+        WHERE m.item_id = ? 
+        AND ((m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?))
+        ORDER BY m.sent_at ASC
+    ");
+    $stmt->execute([$item_id, $user_id, $other_id, $other_id, $user_id]);
+    $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    jsonResponse(true, $messages);
-
+    echo json_encode(['success' => true, 'data' => $messages]);
 } catch (PDOException $e) {
-    jsonResponse(false, null, 'Database error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Database error']);
 }
-?>
