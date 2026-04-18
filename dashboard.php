@@ -134,32 +134,32 @@ $my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <p class="text-sm text-on-surface-variant font-['Inter']">Digital Concierge</p>
 </div>
 <div class="flex flex-col gap-2 font-['Inter'] text-sm font-medium">
-<a class="flex items-center gap-3 p-3 text-[#0F7173] bg-white dark:bg-slate-800 rounded-lg shadow-sm font-semibold hover:translate-x-1 transition-transform cursor-pointer transition-all" href="#">
+<a class="flex items-center gap-3 p-3 text-[#0F7173] bg-white dark:bg-slate-800 rounded-lg shadow-sm font-semibold hover:translate-x-1 transition-transform cursor-pointer transition-all" href="dashboard.php">
 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
         Dashboard
       </a>
-<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="#">
+<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="dashboard.php">
 <span class="material-symbols-outlined" data-icon="description">description</span>
         My Reports
       </a>
-<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="#">
+<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="messages.php">
 <span class="material-symbols-outlined" data-icon="chat">chat</span>
         Messages
       </a>
-<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="#">
+<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg opacity-50 pointer-events-none" href="#" title="Coming soon">
 <span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
         Saved Items
       </a>
-<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="#">
+<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg opacity-50 pointer-events-none" href="#" title="Coming soon">
 <span class="material-symbols-outlined" data-icon="settings">settings</span>
         Settings
       </a>
 </div>
 <div class="mt-auto pt-6">
-<button class="w-full bg-[#0D1B2A] hover:bg-primary-container text-white py-3 px-4 rounded-DEFAULT font-bold text-sm transition-all shadow-[0_8px_32px_rgba(13,27,42,0.06)] flex items-center justify-center gap-2">
+<a href="post-lost.php" class="w-full bg-[#0D1B2A] hover:bg-primary-container text-white py-3 px-4 rounded-DEFAULT font-bold text-sm transition-all shadow-[0_8px_32px_rgba(13,27,42,0.06)] flex items-center justify-center gap-2">
 <span class="material-symbols-outlined" data-icon="add">add</span>
         New Report
-      </button>
+      </a>
 </div>
 </nav>
 <!-- Main Content -->
@@ -263,7 +263,7 @@ $my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <section class="lg:col-span-1">
 <div class="flex justify-between items-center mb-6">
 <h3 class="text-lg font-bold text-[#0D1B2A]">Active Reports</h3>
-<a class="text-sm text-[#0F7173] font-medium hover:underline" href="#">View All</a>
+<a class="text-sm text-[#0F7173] font-medium hover:underline" href="browse.php">View All</a>
 </div>
 <div class="flex flex-col gap-4">
 <?php if (empty($my_items)): ?>
