@@ -167,7 +167,7 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <h2 class="text-[2rem] font-bold font-headline text-on-surface mb-2">Recent Reports</h2>
 <p class="text-[0.875rem] font-body text-on-surface-variant">Browse the latest lost and found items in your area.</p>
 </div>
-<a class="hidden sm:flex items-center text-secondary font-label font-bold text-sm hover:text-[#004f51] transition-colors" href="#">
+<a class="hidden sm:flex items-center text-secondary font-label font-bold text-sm hover:text-[#004f51] transition-colors" href="browse.php">
                     View All Items
                     <span class="material-symbols-outlined ml-1 text-[18px]">arrow_forward</span>
 </a>
