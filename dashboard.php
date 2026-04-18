@@ -166,6 +166,13 @@ $my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <main class="flex-1 ml-0 md:ml-[220px] p-6 md:p-12 max-w-7xl">
 <!-- Header -->
 <?php include 'includes/navbar.php'; ?>
+
+<!-- Welcome Section -->
+<div class="mb-8 mt-4">
+    <h2 class="text-2xl font-bold text-[#0D1B2A] mb-1">Welcome back, <?= htmlspecialchars($_SESSION['full_name'] ?? 'User') ?>! 👋</h2>
+    <p class="text-sm text-on-surface-variant">Here's an overview of your activity and reports.</p>
+</div>
+
 <!-- Stats Row -->
 <section class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
