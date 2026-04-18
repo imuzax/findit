@@ -1,3 +1,4 @@
+<?php require_once 'includes/auth_check.php'; ?>
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
