@@ -1,0 +1,62 @@
+/* d:\Freelancing\ReclaimHub\findit\assets\css\responsive.css */
+
+/* Large screens (Desktops, 1200px and down) */
+@media (max-width: 1200px) {
+    .container {
+        padding: 0 40px;
+    }
+}
+
+/* Medium screens (Tablets, 992px and down) */
+@media (max-width: 992px) {
+    .display-lg {
+        font-size: 2.75rem;
+    }
+    
+    .headline-lg {
+        font-size: 1.75rem;
+    }
+
+    .nav-links {
+        display: none; /* In a full app, we'd add a hamburger menu */
+    }
+}
+
+/* Small screens (Phones, 768px and down) */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 24px;
+    }
+
+    .display-lg {
+        font-size: 2rem;
+    }
+
+    .card-actions {
+        flex-direction: column;
+    }
+    
+    .card-actions .btn {
+        width: 100%;
+    }
+
+    .glass-container {
+        padding: var(--spacing-md);
+    }
+}
+
+/* Extra small screens (Small Phones, 480px and down) */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 16px;
+    }
+    
+    .search-input {
+        font-size: 1rem;
+        padding: 16px 16px 16px 48px;
+    }
+    
+    .search-wrapper i {
+        left: 16px;
+    }
+}

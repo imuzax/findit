@@ -1,0 +1,63 @@
+/* Smooth global behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #f7fafc;
+}
+::-webkit-scrollbar-thumb {
+    background: #0f7173; /* Stitch Secondary */
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #0D1B2A; /* Stitch Primary */
+}
+
+/* Keyframe Animations */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Enhanced Hover Mechanics */
+button, a {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, background 0.3s ease !important;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(13, 27, 42, 0.15) !important;
+}
+
+/* Make image containers crop cleanly during zoom */
+.overflow-hidden img {
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+.overflow-hidden:hover img {
+    transform: scale(1.08) !important;
+}
+
+/* Glassmorphism Cards Float Effect */
+div[class*="backdrop-blur"], .rounded-xl, .rounded-2xl {
+    transition: transform 0.4s ease-out, box-shadow 0.4s ease-out !important;
+}
+
+div[class*="backdrop-blur"]:hover, .rounded-xl:hover, .rounded-2xl:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 24px 48px rgba(13, 27, 42, 0.08) !important;
+}
+
+/* Active links subtle glow */
+a:hover {
+    filter: brightness(1.1);
+}

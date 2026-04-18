@@ -1,0 +1,129 @@
+/* d:\Freelancing\ReclaimHub\findit\assets\css\style.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+
+:root {
+    /* Brand Colors */
+    --primary: #0D1B2A;
+    --primary-container: #0f1c2c;
+    --secondary: #0F7173;
+    --tertiary: #F4A261;
+
+    /* Surfaces */
+    --background: #f7fafc;
+    --surface: #f7fafc;
+    --surface-low: #f1f4f6;
+    --surface-lowest: #ffffff;
+    
+    /* Text & Lines */
+    --on-surface: #181c1e;
+    --on-surface-variant: #44474c;
+    --outline-variant: rgba(196, 198, 204, 0.15); /* Ghost border */
+    
+    /* Spacing */
+    --spacing-xs: 8px;
+    --spacing-sm: 16px;
+    --spacing-md: 24px;
+    --spacing-lg: 32px;
+    --spacing-xl: 48px;
+    --spacing-xxl: 64px;
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-full: 9999px;
+}
+
+/* Global Resets */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background);
+    color: var(--on-surface);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Editorial Voice */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--primary);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.display-lg {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.headline-lg {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.title-md {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.body-md {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--on-surface-variant);
+}
+
+.label-md {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Links */
+a {
+    color: var(--secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    opacity: 0.8;
+}
+
+/* The No-Line Philosophy Layouts */
+.section-surface {
+    background-color: var(--surface);
+    padding: var(--spacing-xxl) 0;
+}
+
+.section-surface-low {
+    background-color: var(--surface-low);
+    padding: var(--spacing-xxl) 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+/* Utility constraints */
+.img-responsive {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.text-center { text-align: center; }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
