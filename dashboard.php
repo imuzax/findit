@@ -1,3 +1,38 @@
+<?php
+require_once 'includes/config.php';
+require_once 'includes/auth_check.php';
+
+$user_id = $_SESSION['user_id'];
+
+// Get counts
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM items WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$total_posts = $stmt->fetchColumn();
+
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM items WHERE user_id = ? AND status = 'returned'");
+$stmt->execute([$user_id]);
+$items_recovered = $stmt->fetchColumn();
+
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id IN (SELECT item_id FROM items WHERE user_id = ?) AND status = 'pending'");
+$stmt->execute([$user_id]);
+$pending_claims = $stmt->fetchColumn();
+
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND is_read = 0");
+$stmt->execute([$user_id]);
+$unread_messages = $stmt->fetchColumn();
+
+// Get active reports
+$stmt = $pdo->prepare("
+    SELECT i.*, 
+           (SELECT image_path FROM item_images WHERE item_id = i.item_id ORDER BY is_primary DESC LIMIT 1) as primary_image
+    FROM items i
+    WHERE i.user_id = ? AND i.status IN ('active', 'matched', 'verified')
+    ORDER BY i.created_at DESC
+    LIMIT 5
+");
+$stmt->execute([$user_id]);
+$my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
@@ -138,21 +173,21 @@
 <span class="material-symbols-outlined text-[#0D1B2A]" data-icon="post_add">post_add</span>
 <span class="text-xs font-semibold uppercase tracking-wider">Total Posts</span>
 </div>
-<p class="text-3xl font-bold text-[#0D1B2A]">12</p>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $total_posts ?></p>
 </div>
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
 <div class="flex items-center gap-3 mb-4 text-on-surface-variant">
 <span class="material-symbols-outlined text-[#0F7173]" data-icon="check_circle">check_circle</span>
 <span class="text-xs font-semibold uppercase tracking-wider">Items Recovered</span>
 </div>
-<p class="text-3xl font-bold text-[#0D1B2A]">8</p>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $items_recovered ?></p>
 </div>
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
 <div class="flex items-center gap-3 mb-4 text-on-surface-variant">
 <span class="material-symbols-outlined text-[#F4A261]" data-icon="pending_actions">pending_actions</span>
 <span class="text-xs font-semibold uppercase tracking-wider">Pending Claims</span>
 </div>
-<p class="text-3xl font-bold text-[#0D1B2A]">3</p>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $pending_claims ?></p>
 </div>
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)] relative overflow-hidden">
 <div class="absolute top-0 right-0 w-16 h-16 bg-[#0D1B2A]/5 rounded-bl-full"></div>
@@ -160,27 +195,27 @@
 <span class="material-symbols-outlined text-[#0D1B2A]" data-icon="mark_email_unread">mark_email_unread</span>
 <span class="text-xs font-semibold uppercase tracking-wider">Unread Messages</span>
 </div>
-<p class="text-3xl font-bold text-[#0D1B2A]">5</p>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $unread_messages ?></p>
 </div>
 </section>
 <!-- Quick Actions -->
 <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-<button class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#F4A261] to-[#d9823f] shadow-[0_8px_32px_rgba(244,162,97,0.2)]">
+<a href="post-lost.php?type=lost" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#F4A261] to-[#d9823f] shadow-[0_8px_32px_rgba(244,162,97,0.2)] block">
 <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 <div class="relative z-10 text-white">
 <span class="material-symbols-outlined text-4xl mb-4 block" data-icon="search_hands_free">search_hands_free</span>
 <h3 class="text-xl font-bold mb-2">Report a Lost Item</h3>
 <p class="text-white/90 text-sm">Alert the community to help you find what you have lost.</p>
 </div>
-</button>
-<button class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#0F7173] to-[#0a4e50] shadow-[0_8px_32px_rgba(15,113,115,0.2)]">
+</a>
+<a href="post-lost.php?type=found" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#0F7173] to-[#0a4e50] shadow-[0_8px_32px_rgba(15,113,115,0.2)] block">
 <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 <div class="relative z-10 text-white">
 <span class="material-symbols-outlined text-4xl mb-4 block" data-icon="volunteer_activism">volunteer_activism</span>
 <h3 class="text-xl font-bold mb-2">Report a Found Item</h3>
 <p class="text-white/90 text-sm">Help reunite an item with its rightful owner.</p>
 </div>
-</button>
+</a>
 </section>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 <!-- Recent Activity Feed -->
@@ -224,28 +259,31 @@
 <a class="text-sm text-[#0F7173] font-medium hover:underline" href="#">View All</a>
 </div>
 <div class="flex flex-col gap-4">
-<!-- Card 1 -->
-<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(13,27,42,0.04)] border-l-4 border-[#F4A261]">
-<div class="flex h-24">
-<img alt="Dog" class="w-24 h-full object-cover" data-alt="Golden retriever dog looking attentively in a sunlit park with green grass" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCAwsNjTXvxXHl2Q2gSCAMj39chNRpls2DXg4avPqOBM58ahE6TTw0TIpg7eGGqYj42tRAqO290HMCDBpcuwpfoY1Lg8LnKidmRGXvQ5jjF8FQM90XU3i2WWFTnLTyJQh2SCma_HGSCSBow42dICnKZ8Ow1Wacinec3dud_YtmYRdbjZ68scBmp3tSITv1VxiW3WPKLgqcmzMlfgIC8jDPujeeMEial5Of7yL8usGMHErhVJTwG4VYlDI9Ner8G81nrs4zNPutucmK"/>
-<div class="p-4 flex flex-col justify-center">
-<span class="text-[10px] font-bold uppercase text-[#F4A261] tracking-wider mb-1">Lost</span>
-<h4 class="text-sm font-bold text-[#0D1B2A] leading-tight">Golden Retriever 'Max'</h4>
-<p class="text-xs text-on-surface-variant mt-1 line-clamp-1">Last seen near City Park</p>
-</div>
-</div>
-</div>
-<!-- Card 2 -->
-<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(13,27,42,0.04)] border-l-4 border-[#0F7173]">
-<div class="flex h-24">
-<img alt="Keys" class="w-24 h-full object-cover" data-alt="Set of keys with a distinctive blue lanyard resting on a wooden bench" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl8CRzeqRXXc-SqKxhi_Hym3FuYJlCicVtTkiMfEPopDmwjOgR_tyZvkcTxChm_ZQBNdMmRDksbzlzXq6JDzcV-hJI1HPi6bWdW6lZxKQkHeGtmjv1rVZg1hCjvng6blfeAlgP0NE_4DrWf6PKrdVwfpbvsVN8AvICYAHm5pY0rB-XXGO9-IK_caMOE4_VosXUNbvyZkPz360nMF_QTzoyizQBHGQpEKJzK3jaG76b4Li2_xK5qSw18YnjpW8PfPq2UKHQUiD0WSIj"/>
-<div class="p-4 flex flex-col justify-center">
-<span class="text-[10px] font-bold uppercase text-[#0F7173] tracking-wider mb-1">Found</span>
-<h4 class="text-sm font-bold text-[#0D1B2A] leading-tight">Keys with Blue Lanyard</h4>
-<p class="text-xs text-on-surface-variant mt-1 line-clamp-1">Found at Downtown Cafe</p>
-</div>
-</div>
-</div>
+<?php if (empty($my_items)): ?>
+    <div class="p-6 text-center text-on-surface-variant bg-surface-container-lowest rounded-xl">
+        <span class="material-symbols-outlined text-4xl opacity-50 mb-2">inbox</span>
+        <p>No active reports found.</p>
+    </div>
+<?php else: ?>
+    <?php foreach ($my_items as $item): ?>
+    <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(13,27,42,0.04)] border-l-4 <?= $item['type'] === 'lost' ? 'border-[#F4A261]' : 'border-[#0F7173]' ?>">
+    <div class="flex h-24">
+    <?php if (!empty($item['primary_image'])): ?>
+        <img alt="Item Image" class="w-24 h-full object-cover" src="<?= htmlspecialchars(preg_replace('/^\.\.\//', '', $item['primary_image'])) ?>"/>
+    <?php else: ?>
+        <div class="w-24 h-full bg-surface-container flex items-center justify-center">
+            <span class="material-symbols-outlined text-outline">image</span>
+        </div>
+    <?php endif; ?>
+    <div class="p-4 flex flex-col justify-center">
+    <span class="text-[10px] font-bold uppercase <?= $item['type'] === 'lost' ? 'text-[#F4A261]' : 'text-[#0F7173]' ?> tracking-wider mb-1"><?= htmlspecialchars($item['type']) ?></span>
+    <h4 class="text-sm font-bold text-[#0D1B2A] leading-tight line-clamp-1"><a href="item-detail.php?id=<?= $item['item_id'] ?>" class="hover:underline"><?= htmlspecialchars($item['title']) ?></a></h4>
+    <p class="text-xs text-on-surface-variant mt-1 line-clamp-1"><?= htmlspecialchars($item['location_text']) ?></p>
+    </div>
+    </div>
+    </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 </div>
 </section>
 </div>
