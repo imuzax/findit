@@ -259,8 +259,11 @@ $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
             
             if(data.success) {
                 statusBox.classList.add('bg-[#c6f6d5]', 'text-[#22543d]');
-                statusBox.innerText = data.message;
+                statusBox.innerText = data.message + " Redirecting to messages...";
                 btn.style.display = 'none'; // hide button gracefully
+                setTimeout(() => {
+                    window.location.href = `messages.php?item_id=${itemId}`;
+                }, 1500);
             } else {
                 statusBox.classList.add('bg-error-container', 'text-on-error-container');
                 statusBox.innerText = data.message;

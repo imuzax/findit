@@ -24,7 +24,7 @@ if (!$item_id) {
 
 try {
     // Check if the item exists and the user is NOT the owner
-    $stmt = $pdo->prepare("SELECT user_id, status FROM items WHERE item_id = ?");
+    $stmt = $pdo->prepare("SELECT user_id, status, type, title FROM items WHERE item_id = ?");
     $stmt->execute([$item_id]);
     $item = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -44,7 +44,7 @@ try {
     }
 
     // Check if user already claimed
-    $stmt = $pdo->prepare("SELECT claim_id FROM claims WHERE item_id = ? AND claimant_id = ?");
+    $stmt = $pdo->prepare("SELECT claim_id FROM claims WHERE item_id = ? AND claimant_user_id = ?");
     $stmt->execute([$item_id, $user_id]);
     if ($stmt->fetch()) {
         echo json_encode(['success' => false, 'message' => 'You have already submitted a claim/contact request for this item.']);
@@ -52,8 +52,21 @@ try {
     }
 
     // Insert claim
-    $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id, status) VALUES (?, ?, 'pending')");
+    $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_user_id, status) VALUES (?, ?, 'pending')");
     $stmt->execute([$item_id, $user_id]);
+
+    // Generate auto-message based on item type
+    $owner_id = $item['user_id'];
+    $item_title = $item['title'];
+    if ($item['type'] === 'lost') {
+        $msg_text = "Hi, I think I have found your missing '" . $item_title . "'. Please let me know how we can coordinate.";
+    } else {
+        $msg_text = "Hi, I believe the '" . $item_title . "' you found belongs to me. Let me know what details you need to verify.";
+    }
+
+    // Insert starter message
+    $stmtMsg = $pdo->prepare("INSERT INTO messages (sender_id, receiver_id, item_id, message_text) VALUES (?, ?, ?, ?)");
+    $stmtMsg->execute([$user_id, $owner_id, $item_id, $msg_text]);
 
     // Optional: We can also update item status to 'matched' just to show activity.
     // $stmt = $pdo->prepare("UPDATE items SET status = 'matched' WHERE item_id = ? AND status = 'active'");

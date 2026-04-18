@@ -1,282 +1,405 @@
-<!DOCTYPE html>
+<?php
+require_once 'includes/config.php';
+require_once 'includes/auth_check.php';
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Messages - FindIt</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+$user_id = $_SESSION['user_id'];
+
+// Fetch all conversations
+$sql = "
+    SELECT 
+        m.item_id,
+        CASE WHEN m.sender_id = :u1 THEN m.receiver_id ELSE m.sender_id END as other_id,
+        MAX(m.sent_at) as latest_message_time,
+        SUM(CASE WHEN m.receiver_id = :u2 AND m.is_read = 0 THEN 1 ELSE 0 END) as unread_count,
+        u.full_name as other_name,
+        i.title as item_title,
+        i.status as item_status,
+        (SELECT image_path FROM item_images img WHERE img.item_id = m.item_id ORDER BY is_primary DESC LIMIT 1) as item_image
+    FROM messages m
+    JOIN users u ON u.user_id = (CASE WHEN m.sender_id = :u3 THEN m.receiver_id ELSE m.sender_id END)
+    JOIN items i ON i.item_id = m.item_id
+    WHERE m.sender_id = :u4 OR m.receiver_id = :u5
+    GROUP BY m.item_id, other_id, u.full_name, i.title, i.status
+    ORDER BY latest_message_time DESC
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['u1'=>$user_id, 'u2'=>$user_id, 'u3'=>$user_id, 'u4'=>$user_id, 'u5'=>$user_id]);
+$conversations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch latest text for each conversation (safer than complex SQL alias subquery)
+foreach ($conversations as &$conv) {
+    $stmtText = $pdo->prepare("SELECT message_text FROM messages WHERE item_id = ? AND (sender_id = ? OR receiver_id = ?) ORDER BY sent_at DESC LIMIT 1");
+    $stmtText->execute([$conv['item_id'], $conv['other_id'], $conv['other_id']]);
+    $conv['latest_text'] = $stmtText->fetchColumn();
+}
+unset($conv);
+
+// Determine active conversation
+$active_item_id = isset($_GET['item_id']) ? (int)$_GET['item_id'] : null;
+$active_other_id = isset($_GET['other_id']) ? (int)$_GET['other_id'] : null;
+
+$active_conv = null;
+
+if ($active_item_id && $active_other_id) {
+    // Check if it exists in our list
+    foreach ($conversations as $c) {
+        if ($c['item_id'] == $active_item_id && $c['other_id'] == $active_other_id) {
+            $active_conv = $c;
+            break;
+        }
+    }
+} elseif (count($conversations) > 0) {
+    $active_conv = $conversations[0];
+    $active_item_id = $active_conv['item_id'];
+    $active_other_id = $active_conv['other_id'];
+}
+
+// Function to format relative time
+function time_elapsed_string($datetime, $full = false) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+    if ($diff->d == 0 && $diff->h == 0 && $diff->i < 1) return 'Just now';
+    if ($diff->d == 0 && $diff->h == 0) return $diff->i . 'm ago';
+    if ($diff->d == 0) return $diff->h . 'h ago';
+    if ($diff->d == 1) return 'Yesterday';
+    return $ago->format('M j');
+}
+?>
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Messages - FindIt</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     "colors": {
-                        "on-secondary-fixed-variant": "#004f51",
-                        "on-primary": "#ffffff",
-                        "on-primary-fixed": "#0f1c2c",
-                        "tertiary-container": "#2f1400",
-                        "surface-container-low": "#f1f4f6",
-                        "secondary-container": "#9cedef",
-                        "inverse-surface": "#2d3133",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-bright": "#f7fafc",
-                        "surface-variant": "#e0e3e5",
-                        "surface-container": "#ebeef0",
                         "primary": "#000000",
-                        "primary-fixed-dim": "#bac8dc",
-                        "surface-container-highest": "#e0e3e5",
                         "secondary": "#00696b",
-                        "tertiary-fixed": "#ffdcc4",
-                        "surface-dim": "#d7dadc",
-                        "secondary-fixed": "#9ff0f2",
-                        "on-error-container": "#93000a",
                         "surface": "#f7fafc",
-                        "on-tertiary-fixed": "#2f1400",
-                        "on-tertiary": "#ffffff",
-                        "inverse-primary": "#bac8dc",
-                        "on-tertiary-container": "#bb7336",
-                        "on-error": "#ffffff",
-                        "primary-fixed": "#d6e4f9",
-                        "on-tertiary-fixed-variant": "#6f3800",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container": "#ebeef0",
                         "surface-container-high": "#e5e9eb",
                         "on-surface": "#181c1e",
-                        "on-secondary": "#ffffff",
-                        "inverse-on-surface": "#eef1f3",
-                        "outline-variant": "#c4c6cc",
-                        "tertiary": "#000000",
-                        "outline": "#74777d",
-                        "error": "#ba1a1a",
-                        "on-background": "#181c1e",
-                        "on-primary-container": "#778598",
-                        "primary-container": "#0f1c2c",
-                        "secondary-fixed-dim": "#83d4d6",
-                        "on-primary-fixed-variant": "#3a4859",
                         "on-surface-variant": "#44474c",
-                        "tertiary-fixed-dim": "#ffb780",
-                        "on-secondary-container": "#066e70",
-                        "error-container": "#ffdad6",
-                        "surface-tint": "#525f71",
-                        "on-secondary-fixed": "#002020",
-                        "background": "#f7fafc"
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#0f1c2c",
+                        "on-primary-container": "#778598",
+                        "outline-variant": "#c4c6cc"
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {},
                     "fontFamily": {
-                        "headline": ["Inter"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
+                        "headline": ["Inter"], "body": ["Inter"], "label": ["Inter"]
                     }
-                },
-            },
+                }
+            }
         }
     </script>
-<style>
+    <style>
         body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+        
+        /* Custom Scrollbar for messages */
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #c4c6cc; border-radius: 10px; }
+        .chat-scroll::-webkit-scrollbar-thumb:hover { background: #74777d; }
     </style>
-<link rel="stylesheet" href="assets/css/smooth.css">
-<script src="assets/js/smooth.js" defer></script>
 </head>
-<body class="bg-background text-on-background min-h-screen flex font-body">
-<!-- SideNavBar Component -->
-<nav class="hidden md:flex w-[220px] h-screen fixed left-0 border-r-0 bg-[#f7fafc] dark:bg-slate-950 flex-col gap-4 p-6 z-50 tonal-layering bg-[#f1f4f6] dark:bg-slate-900 flat no-line">
-<div class="mb-8">
-<h1 class="text-xl font-bold text-[#0D1B2A] dark:text-white font-headline">FindIt</h1>
-<p class="text-sm text-on-surface-variant font-body">Digital Concierge</p>
-</div>
-<button class="w-full bg-primary-container text-on-primary py-3 px-4 rounded-DEFAULT font-label font-bold text-[0.75rem] mb-6 flex items-center justify-center gap-2 hover:bg-primary transition-colors">
-<span class="material-symbols-outlined text-[18px]">add</span>
-            New Report
-        </button>
-<div class="flex flex-col gap-2 flex-grow">
-<!-- Inactive -->
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all font-['Inter'] text-sm font-medium" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
-                Dashboard
+<body class="bg-surface text-on-surface flex min-h-screen font-body overflow-hidden">
+    
+    <!-- SideNavBar Component -->
+    <nav class="hidden md:flex flex-col gap-4 p-6 bg-[#f7fafc] dark:bg-slate-950 w-[220px] h-screen border-r border-outline-variant/20 z-40">
+        <div class="mb-8">
+            <h1 class="text-xl font-bold text-[#0D1B2A] dark:text-white font-headline tracking-tight">FindIt</h1>
+            <p class="text-sm text-on-surface-variant">Digital Concierge</p>
+        </div>
+        <div class="flex flex-col gap-2 font-label text-sm font-medium">
+            <a href="dashboard.php" class="flex items-center gap-3 p-3 text-slate-500 rounded-lg hover:bg-surface-container transition-all">
+                <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span> Dashboard
             </a>
-<!-- Inactive -->
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all font-['Inter'] text-sm font-medium" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
-                My Reports
+            <a href="dashboard.php" class="flex items-center gap-3 p-3 text-slate-500 rounded-lg hover:bg-surface-container transition-all">
+                <span class="material-symbols-outlined" data-icon="description">description</span> My Reports
             </a>
-<!-- Active -->
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#0F7173] bg-white dark:bg-slate-800 shadow-sm font-semibold hover:translate-x-1 transition-transform cursor-pointer transition-all font-['Inter'] text-sm" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="chat" data-weight="fill" style="font-variation-settings: 'FILL' 1;">chat</span>
-                Messages
+            <a href="messages.php" class="flex items-center gap-3 p-3 text-[#0F7173] bg-white shadow-sm font-semibold rounded-lg">
+                <span class="material-symbols-outlined" data-icon="chat">chat</span> Messages
             </a>
-<!-- Inactive -->
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all font-['Inter'] text-sm font-medium" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="bookmark">bookmark</span>
-                Saved Items
+        </div>
+        <div class="mt-auto pt-6">
+            <a href="post-lost.php" class="w-full bg-[#0D1B2A] hover:bg-primary-container text-white py-3 px-4 rounded-DEFAULT font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all">
+                <span class="material-symbols-outlined">add</span> New Report
             </a>
-<!-- Inactive -->
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all font-['Inter'] text-sm font-medium mt-auto" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
-                Settings
-            </a>
-</div>
-</nav>
-<!-- Main Content -->
-<main class="flex-1 md:ml-[220px] flex h-screen bg-surface overflow-hidden">
-<!-- Conversations List Panel -->
-<section class="w-full md:w-[380px] flex flex-col h-full bg-surface-container-low border-r border-outline-variant/15 flex-shrink-0">
-<div class="p-6 pb-4">
-<h2 class="text-[2rem] font-bold font-headline text-on-surface tracking-tight mb-6">Messages</h2>
-<div class="relative mb-6 shadow-[0_8px_32px_rgba(13,27,42,0.06)] rounded-lg">
-<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="w-full pl-12 pr-4 py-3 bg-surface-container-lowest rounded-lg border-none focus:ring-2 focus:ring-secondary text-[0.875rem] font-body text-on-surface placeholder:text-on-surface-variant" placeholder="Search conversations..." type="text"/>
-</div>
-</div>
-<div class="flex-1 overflow-y-auto overflow-x-hidden p-3 gap-2 flex flex-col">
-<!-- Active Conversation -->
-<article class="p-4 bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.06)] cursor-pointer relative overflow-hidden group">
-<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
-<div class="flex gap-4 items-start">
-<div class="relative">
-<img alt="Sarah Jenkins" class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="close up portrait of a smiling young woman with bright natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9DUAdMaIYvU5K7RB2K3PNnfoMlFRtbG4hKyTY3iEIgxhoHEur0Gk-m_i6q_3axffN6bUHDMkHqU0itdmBpVjduisHfEsUrwH0A1zq_WCCxYocoREj0cTvYcGexUoT2gy5JbbmYoIMXBYVZZlF39v_zje0RdwbooZIHAM1sZNFS3kLtBdmlL4DIMmE1Y3Micbw_1p-3f2sZ6RVbQjH8UA0nnh5j8FdzMUNhtWgKovAT9JfEOKldIguVFMo84MdbVAzIrAWczB60Eg0"/>
-<span class="absolute bottom-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-surface-container-lowest"></span>
-</div>
-<div class="flex-1 min-w-0">
-<div class="flex justify-between items-baseline mb-1">
-<h3 class="font-semibold text-[1.125rem] text-on-surface truncate pr-2">Sarah Jenkins</h3>
-<span class="text-[0.75rem] font-label text-on-surface-variant whitespace-nowrap">2m ago</span>
-</div>
-<p class="text-[0.875rem] text-on-surface-variant truncate font-body">Yes, I found it near the park entrance. I can meet you later today.</p>
-<div class="mt-2 flex items-center gap-2">
-<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-[0.75rem] font-label text-on-surface-variant flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">watch</span>
-                                    Silver Watch
-                                </span>
-</div>
-</div>
-</div>
-</article>
-<!-- Unread Conversation -->
-<article class="p-4 bg-transparent hover:bg-surface-container-lowest/50 rounded-xl cursor-pointer transition-colors relative group">
-<div class="flex gap-4 items-start">
-<div class="relative">
-<img alt="Michael Chen" class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="portrait of a young man with glasses in urban setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvqCSuOIYrwqq-05WBZxk0F4PVIfXbKRemP5RKE9MpxnCa98MAp4VPfPbHwhr0bkZgUeXiKaPpsSwC5xIb4Dpcmh07BBdqOKdCew0lmEvBd38NeYEuCCopo3JquKfa70mBPVdgl3QfXa9NDpNPo67oqAfgfL7GTS1JCUGjvIKnYHLFgS4K-o3CaZZ_KYjpD9rbr1I15j_i_8NQwBZi5URPKS5QSP3VA6idvWClwdHotVajQf05hEA3_jPvuYj7Wm-uoTbh1e39DHsT"/>
-</div>
-<div class="flex-1 min-w-0">
-<div class="flex justify-between items-baseline mb-1">
-<h3 class="font-bold text-[1.125rem] text-on-surface truncate pr-2">Michael Chen</h3>
-<span class="text-[0.75rem] font-label text-secondary font-bold whitespace-nowrap">1h ago</span>
-</div>
-<p class="text-[0.875rem] text-on-surface font-semibold truncate font-body">Thanks! I'll come pick it up tomorrow morning.</p>
-<div class="mt-2 flex items-center gap-2">
-<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-[0.75rem] font-label text-on-surface-variant flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">key</span>
-                                    Keys
-                                </span>
-<span class="w-2 h-2 bg-secondary rounded-full ml-auto"></span>
-</div>
-</div>
-</div>
-</article>
-<!-- Read Conversation -->
-<article class="p-4 bg-transparent hover:bg-surface-container-lowest/50 rounded-xl cursor-pointer transition-colors relative group">
-<div class="flex gap-4 items-start opacity-70">
-<div class="relative">
-<div class="w-12 h-12 rounded-full bg-primary-fixed-dim text-on-primary-fixed flex items-center justify-center font-bold text-lg">
-                                EJ
-                            </div>
-</div>
-<div class="flex-1 min-w-0">
-<div class="flex justify-between items-baseline mb-1">
-<h3 class="font-semibold text-[1.125rem] text-on-surface truncate pr-2">Elena James</h3>
-<span class="text-[0.75rem] font-label text-on-surface-variant whitespace-nowrap">Yesterday</span>
-</div>
-<p class="text-[0.875rem] text-on-surface-variant truncate font-body">Glad we could get that sorted out.</p>
-<div class="mt-2 flex items-center gap-2">
-<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-[0.75rem] font-label text-on-surface-variant flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">pets</span>
-                                    Golden Retriever
-                                </span>
-</div>
-</div>
-</div>
-</article>
-</div>
-</section>
-<!-- Main Chat Window -->
-<section class="flex-1 flex flex-col h-full bg-surface relative hidden md:flex">
-<!-- Chat Header -->
-<?php include 'includes/navbar.php'; ?>
-<!-- Item Reference Card -->
-<div class="px-8 py-4 bg-surface z-0">
-<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0_8px_32px_rgba(13,27,42,0.06)] flex gap-4 items-center border-l-4 border-secondary">
-<img alt="Silver Watch" class="w-16 h-16 rounded-lg object-cover" data-alt="close up of a modern silver wristwatch on a light surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBniyTUxq5xXAullBql1icbFcOvxQl9VcJf_MlAqMZUbTiN0K8QhnoY3ywsWhjNKjTz5PhptSMo0ZmBFIEn2J5BZhsOQ1MM2i3pgdDEu9XNbturDsRZou6tcksrIxZ0rUuX21mjg2K9ZeRU3HEJzFlphPGwjMVZeZRb3ncvcokj-oB52Ieya265ZQ3-ZijPj6eGugWJnmBi5mcS4n4IO3EWSV7I4t7Y5mlznvC54flWqam-5eSTC_zI3dsbg-gtoHDcAs6O42rchh3R"/>
-<div class="flex-1">
-<span class="text-[0.75rem] font-label text-secondary uppercase tracking-wider mb-1 block">Regarding Found Item</span>
-<h4 class="font-semibold text-[1.125rem] text-on-surface">Silver Citizen Eco-Drive Watch</h4>
-<p class="text-[0.875rem] text-on-surface-variant">Found at Riverside Park on Oct 12</p>
-</div>
-<a href="item-detail.php" class="px-4 py-2 bg-secondary text-on-secondary rounded-DEFAULT font-label font-bold text-[0.75rem] hover:bg-on-secondary-fixed-variant transition-colors" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-</div>
-<!-- Chat Messages Area -->
-<div class="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
-<!-- Date Divider -->
-<div class="flex items-center justify-center gap-4">
-<div class="h-px bg-outline-variant/20 flex-1"></div>
-<span class="text-[0.75rem] font-label text-on-surface-variant uppercase tracking-wider">Today, 10:42 AM</span>
-<div class="h-px bg-outline-variant/20 flex-1"></div>
-</div>
-<!-- Received Message -->
-<div class="flex gap-4 max-w-[80%]">
-<img alt="Sarah Jenkins" class="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1" data-alt="close up portrait of a smiling young woman with bright natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbz9suL9bVnufy2PyvTEPjrhKKEwKoVqlnLQt2h-0_YTR-zkp9aJAhRd7eIJ7aZnMQq6Ma2he5RRhrYEXjQ6oe2DH2mTuV49DehJm-669G64swVjqprLffG8wKOMSTpfgKkcyStalc55N_dTF698acl65Zw8mvgSt9-uEXVTzlHS33euxfwSMBfbgRaW4I1XWOsurUbZ3cTApr0S1JAEIsR8saY41Wf6YjdMrzr7Pi7sXZJYsgCAFsFaO_ND3l4Nuhplhh5iysqqZp"/>
-<div>
-<div class="bg-surface-container-lowest p-4 rounded-2xl rounded-tl-sm shadow-sm text-[0.875rem] text-on-surface font-body leading-relaxed">
-                            Hi there! I saw your post about the silver watch. I think it might be mine. Does it have a small scratch near the 3 o'clock mark?
-                        </div>
-<span class="text-[0.75rem] font-label text-on-surface-variant mt-1 block ml-1">10:42 AM</span>
-</div>
-</div>
-<!-- Sent Message -->
-<div class="flex gap-4 max-w-[80%] self-end flex-row-reverse">
-<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
-                        Me
+        </div>
+    </nav>
+
+    <!-- Content Split -->
+    <main class="flex-1 flex h-screen bg-surface relative">
+        
+        <!-- Left Panel: Conversations List -->
+        <section class="w-full md:w-[350px] lg:w-[400px] flex flex-col h-full bg-surface-container-low border-r border-outline-variant/15 flex-shrink-0 z-10 transition-transform duration-300 <?= ($active_conv) ? 'hidden md:flex' : 'flex' ?>">
+            <div class="p-6 pb-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold font-headline text-on-surface tracking-tight">Chats</h2>
+                    <!-- md-hidden back button to dashboard if needed -->
+                    <a href="dashboard.php" class="md:hidden p-2 rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-2 chat-scroll">
+                <?php if (empty($conversations)): ?>
+                    <div class="text-center p-6 text-on-surface-variant mt-10">
+                        <span class="material-symbols-outlined text-4xl opacity-50 mb-2">forum</span>
+                        <p class="text-sm">No messages yet.</p>
+                        <p class="text-xs opacity-70 mt-1">When someone claims your item or you claim an item, chat will appear here.</p>
                     </div>
-<div class="flex flex-col items-end">
-<div class="bg-secondary text-on-secondary p-4 rounded-2xl rounded-tr-sm shadow-sm text-[0.875rem] font-body leading-relaxed">
-                            Hello Sarah! Yes, it actually does. I'm pretty sure it's yours then. Where would be a good place to meet up to return it?
+                <?php else: ?>
+                    <?php foreach ($conversations as $conv): 
+                        $isActive = ($active_conv && $active_conv['item_id'] == $conv['item_id'] && $active_conv['other_id'] == $conv['other_id']);
+                        $initials = strtoupper(substr($conv['other_name'], 0, 1) . substr($conv['other_name'], strpos($conv['other_name'], ' ') + 1, 1));
+                    ?>
+                    <a href="messages.php?item_id=<?= $conv['item_id'] ?>&other_id=<?= $conv['other_id'] ?>" 
+                       class="block p-4 rounded-xl cursor-pointer transition-colors relative group <?= $isActive ? 'bg-surface-container-lowest shadow-sm' : 'hover:bg-surface-container-lowest/50' ?>">
+                        <?php if ($isActive): ?>
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-3/4 w-1 bg-secondary rounded-r-full"></div>
+                        <?php endif; ?>
+                        
+                        <div class="flex gap-4 items-center">
+                            <div class="relative flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">
+                                    <?= $initials ?>
+                                </div>
+                                <?php if ($conv['unread_count'] > 0): ?>
+                                    <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#ba1a1a] rounded-full border-2 border-surface-container-low"></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-baseline mb-0.5">
+                                    <h3 class="font-bold text-[1rem] text-on-surface truncate pr-2 <?= $conv['unread_count'] > 0 ? 'text-primary' : '' ?>"><?= htmlspecialchars($conv['other_name']) ?></h3>
+                                    <span class="text-[0.65rem] font-label font-medium <?= $conv['unread_count'] > 0 ? 'text-[#ba1a1a]' : 'text-on-surface-variant' ?> whitespace-nowrap whitespace-nowrap"><?= time_elapsed_string($conv['latest_message_time']) ?></span>
+                                </div>
+                                <p class="text-[0.8rem] truncate font-body <?= $conv['unread_count'] > 0 ? 'font-bold text-on-surface' : 'text-on-surface-variant' ?>">
+                                    <?= htmlspecialchars($conv['latest_text']) ?>
+                                </p>
+                                <div class="mt-1.5 flex items-center gap-1.5 opacity-80">
+                                    <span class="px-2 py-0.5 bg-surface-container rounded gap-1 flex items-center max-w-full text-xs">
+                                        <span class="material-symbols-outlined text-[12px] shrink-0 text-secondary">inventory_2</span>
+                                        <span class="truncate font-semibold text-secondary"><?= htmlspecialchars($conv['item_title']) ?></span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-<div class="flex items-center gap-1 mt-1 mr-1">
-<span class="text-[0.75rem] font-label text-on-surface-variant">10:45 AM</span>
-<span class="material-symbols-outlined text-[14px] text-secondary">done_all</span>
-</div>
-</div>
-</div>
-<!-- Received Message (Current typing/recent) -->
-<div class="flex gap-4 max-w-[80%]">
-<img alt="Sarah Jenkins" class="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1" data-alt="close up portrait of a smiling young woman with bright natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_htUX_VLG9pc0Atza6eCxBU7bbMCn8wrMyCLlMUGDh-u5HFw0p_zP1lKzAZ2V5FzY3Vz4KeDV_raiczDmZDbBAreyT8J4FXCL5E6dfOn1R4x6p6qHbuCgmS2NBKgKE34JzZ2i6ErYY9Hrzpt9Eh5F-ZRKV-vwwnXuQlRkxUTYoV3Mbo94_FDFTFkyooFrPbkX2yGaArERnqmib1IXhgN4CWL5cGEOY1gItf-OabRDF9n_owWlUqx85t4KFHVtSa-UFK_48R4Ge5Hr"/>
-<div>
-<div class="bg-surface-container-lowest p-4 rounded-2xl rounded-tl-sm shadow-sm text-[0.875rem] text-on-surface font-body leading-relaxed">
-                            That's amazing news! Yes, I found it near the park entrance. I can meet you later today.
+                    </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <!-- Right Panel: Chat Thread -->
+        <section class="flex-1 flex flex-col h-full bg-surface relative <?= ($active_conv) ? 'flex' : 'hidden md:flex' ?>">
+            <?php if ($active_conv): ?>
+                
+                <!-- Chat Header / Mobile Back -->
+                <div class="px-6 py-4 bg-surface/90 backdrop-blur-md border-b border-outline-variant/15 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <a href="messages.php" class="md:hidden p-2 rounded-full hover:bg-surface-container text-on-surface flex items-center justify-center -ml-2">
+                            <span class="material-symbols-outlined">arrow_back</span>
+                        </a>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold">
+                                <?= strtoupper(substr($active_conv['other_name'], 0, 1)) ?>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-on-surface leading-tight"><?= htmlspecialchars($active_conv['other_name']) ?></h2>
+                                <p class="text-xs text-on-surface-variant flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#0F7173]"></span> Active User
+                                </p>
+                            </div>
                         </div>
-<span class="text-[0.75rem] font-label text-on-surface-variant mt-1 block ml-1">2 mins ago</span>
-</div>
-</div>
-</div>
-<!-- Input Area -->
-<div class="p-6 bg-surface-container-lowest border-t border-outline-variant/15 z-10 shadow-[0_-8px_32px_rgba(13,27,42,0.03)]">
-<div class="max-w-4xl mx-auto bg-surface rounded-xl flex items-end p-2 gap-2 shadow-sm focus-within:ring-2 focus-within:ring-secondary/50 transition-all">
-<button class="p-3 text-on-surface-variant hover:text-secondary rounded-full hover:bg-surface-container transition-colors shrink-0">
-<span class="material-symbols-outlined">attach_file</span>
-</button>
-<textarea class="w-full bg-transparent border-none focus:ring-0 resize-none py-3 px-2 text-[0.875rem] font-body text-on-surface max-h-[120px] min-h-[48px]" placeholder="Type a message..." rows="1" style="scrollbar-width: thin;"></textarea>
-<button class="p-3 bg-secondary text-on-secondary hover:bg-on-secondary-fixed-variant rounded-lg transition-colors shrink-0 flex items-center justify-center mb-0.5">
-<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">send</span>
-</button>
-</div>
-</div>
-</section>
-</main>
-</body></html>
+                    </div>
+                </div>
+
+                <!-- Related Item Context Card -->
+                <div class="px-6 py-4 bg-surface z-10 sticky top-[70px]">
+                    <div class="bg-surface-container-lowest rounded-xl p-3 shadow-sm border border-outline-variant/20 flex gap-4 items-center">
+                        <?php if(!empty($active_conv['item_image'])): ?>
+                            <img src="<?= htmlspecialchars(preg_replace('/^\.\.\//', '', $active_conv['item_image'])) ?>" class="w-12 h-12 rounded-lg object-cover bg-surface-container shrink-0"/>
+                        <?php else: ?>
+                            <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-outline">image</span>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-[0.95rem] text-on-surface truncate"><?= htmlspecialchars($active_conv['item_title']) ?></h4>
+                            <p class="text-[0.75rem] text-on-surface-variant uppercase tracking-wider font-semibold mt-0.5">
+                                Status: <span class="text-secondary"><?= htmlspecialchars($active_conv['item_status']) ?></span>
+                            </p>
+                        </div>
+                        <a href="item-detail.php?id=<?= $active_conv['item_id'] ?>" class="hidden sm:inline-block px-4 py-2 bg-surface-container text-on-surface rounded font-label font-bold text-[0.75rem] hover:bg-surface-container-high transition-colors whitespace-nowrap">View Item</a>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Stream -->
+                <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-4 chat-scroll" id="chatWindow">
+                    <!-- Loaded dynamically via JS -->
+                    <div class="flex items-center justify-center h-full text-on-surface-variant">
+                        <span class="material-symbols-outlined animate-spin text-2xl mr-2">progress_activity</span> Loading messages...
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 bg-surface-container-lowest border-t border-outline-variant/15 z-20">
+                    <form id="sendMessageForm" class="max-w-4xl mx-auto bg-surface border border-outline-variant/20 rounded-xl flex items-end p-2 gap-2 focus-within:border-secondary transition-all">
+                        <input type="hidden" id="active_other_id" value="<?= $active_other_id ?>">
+                        <input type="hidden" id="active_item_id" value="<?= $active_item_id ?>">
+                        <textarea id="messageInput" class="w-full bg-transparent border-none focus:ring-0 resize-none py-2.5 px-3 text-[0.9rem] font-body text-on-surface max-h-[120px] min-h-[44px]" placeholder="Type your message..." rows="1" required></textarea>
+                        <button type="submit" id="sendBtn" class="p-2.5 bg-secondary text-on-secondary hover:bg-[#0a4e50] rounded-lg transition-colors shrink-0 flex items-center justify-center disabled:opacity-50">
+                            <span class="material-symbols-outlined text-[20px]">send</span>
+                        </button>
+                    </form>
+                </div>
+
+            <?php else: ?>
+                <!-- Empty State (No active conversation selected) -->
+                <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-on-surface-variant bg-surface">
+                    <div class="w-24 h-24 bg-surface-container rounded-full flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-[3rem] text-outline-variant">forum</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-on-surface mb-2 font-headline">No Conversation Selected</h3>
+                    <p class="max-w-md mx-auto text-sm">Select a chat from the left panel to view message history, or go to the dashboard to start a new claim.</p>
+                </div>
+            <?php endif; ?>
+        </section>
+    </main>
+
+    <?php if ($active_conv): ?>
+    <script>
+        const myUserId = <?= $user_id ?>;
+        const chatWindow = document.getElementById('chatWindow');
+        const sendForm = document.getElementById('sendMessageForm');
+        const msgInput = document.getElementById('messageInput');
+        
+        let lastMessageId = 0;
+
+        function renderMessage(msg) {
+            const isMe = (parseInt(msg.sender_id) === myUserId);
+            
+            const timeStr = new Date(msg.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let bubble = document.createElement('div');
+            bubble.classList.add('flex', 'gap-3', 'max-w-[85%]', 'sm:max-w-[75%]');
+            
+            if (isMe) {
+                bubble.classList.add('self-end', 'flex-row-reverse');
+                bubble.innerHTML = `
+                    <div class="flex flex-col items-end">
+                        <div class="bg-secondary text-on-secondary p-3 sm:p-4 rounded-2xl rounded-tr-sm shadow-sm text-[0.9rem] font-body">
+                            ${escapeHtml(msg.message_text)}
+                        </div>
+                        <div class="flex items-center gap-1 mt-1 mr-1">
+                            <span class="text-[0.65rem] font-label text-on-surface-variant">${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bubble.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs flex-shrink-0 mt-1">
+                        <?= strtoupper(substr($active_conv['other_name'], 0, 1)) ?>
+                    </div>
+                    <div>
+                        <div class="bg-surface-container-lowest p-3 sm:p-4 rounded-2xl rounded-tl-sm shadow-sm border border-outline-variant/10 text-[0.9rem] text-on-surface font-body">
+                            ${escapeHtml(msg.message_text)}
+                        </div>
+                        <span class="text-[0.65rem] font-label text-on-surface-variant mt-1 block ml-1">${timeStr}</span>
+                    </div>
+                `;
+            }
+            return bubble;
+        }
+
+        async function fetchMessages() {
+            const other_id = document.getElementById('active_other_id').value;
+            const item_id = document.getElementById('active_item_id').value;
+            
+            try {
+                const response = await fetch(`api/get_messages.php?other_id=${other_id}&item_id=${item_id}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        chatWindow.innerHTML = '<div class="text-center w-full text-sm text-on-surface-variant mt-10">Start the conversation...</div>';
+                        return;
+                    }
+                    
+                    chatWindow.innerHTML = ''; // clear loading state
+                    data.data.forEach(msg => {
+                        chatWindow.appendChild(renderMessage(msg));
+                    });
+                    
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            } catch(e) {
+                console.error("Failed to load messages", e);
+                chatWindow.innerHTML = '<div class="text-center w-full text-sm text-error mt-10">Failed to load messages.</div>';
+            }
+        }
+
+        sendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = msgInput.value.trim();
+            if(!text) return;
+            
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('receiver_id', document.getElementById('active_other_id').value);
+            formData.append('item_id', document.getElementById('active_item_id').value);
+            formData.append('message_text', text);
+            
+            try {
+                const response = await fetch('api/send_message.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if(data.success) {
+                    msgInput.value = '';
+                    chatWindow.appendChild(renderMessage(data.message));
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            } catch(e) {
+                console.error("Failed to send", e);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Load initially
+        fetchMessages();
+        
+        // Auto-refresh messages every 5 seconds
+        setInterval(fetchMessages, 5000);
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+    <?php endif; ?>
+</body>
+</html>
