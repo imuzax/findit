@@ -1,3 +1,18 @@
+<?php
+session_start();
+require_once 'includes/config.php';
+
+$stmt = $pdo->prepare("
+    SELECT i.*, 
+           (SELECT image_path FROM item_images WHERE item_id = i.item_id ORDER BY is_primary DESC LIMIT 1) as primary_image
+    FROM items i
+    WHERE i.status IN ('active', 'matched', 'verified')
+    ORDER BY i.created_at DESC
+    LIMIT 6
+");
+$stmt->execute();
+$recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
@@ -158,76 +173,51 @@
 </a>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-<!-- Card 1 (Lost) -->
-<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_8px_32px_rgba(13,27,42,0.06)] transition-all duration-300">
-<!-- Accent Line -->
-<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F4A261]"></div>
-<div class="flex justify-between items-start mb-4">
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-label bg-[#F4A261]/10 text-[#F4A261]">
-<span class="material-symbols-outlined text-[14px] mr-1">campaign</span>
-                            LOST
-                        </span>
-<span class="text-xs font-body text-outline">2 hours ago</span>
-</div>
-<h3 class="text-[1.125rem] font-semibold font-headline text-on-surface mb-2">Golden Retriever "Max"</h3>
-<div class="flex items-center text-on-surface-variant text-sm font-body mb-4">
-<span class="material-symbols-outlined text-[16px] mr-1.5">location_on</span>
-                        Central Park, near 72nd St entrance
-                    </div>
-<div class="aspect-video w-full rounded-lg bg-surface-container-low mb-4 overflow-hidden relative">
-<img alt="Golden Retriever dog looking attentive outdoors in a park setting with soft natural lighting" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Golden Retriever dog looking attentive outdoors in a park setting with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDggmTya_FPiPsRU7jxukaC_7hQw-2IJAKhRVtS-PEVicz_HtZ4xxTfH13kz9fKoukSf-5G65UD4f7NYeB782HjnidyIyClgXoGuOnZxnJpO3UJHJCv3NKpxujROlYcUHBqEWIswmoLj3Nh_VStLtbvgQfBh4WXPHeH2cqKHcf38PNGGEHhCmVvL63oeEvfyJ6Y0q3cdTWdoliKoSjdAu3TqXxnHTWopVU7IPkb1_hLXLAir38oS8LIKOcz7iyennhQ4QgdScSnR9ES"/>
-</div>
-<p class="text-[0.875rem] font-body text-on-surface-variant mb-6 line-clamp-2">
-                        Friendly male Golden Retriever, wearing a blue collar with tags. Wandered off around 2 PM. Very food motivated.
-                    </p>
-<a href="item-detail.php" class="w-full bg-surface-container text-on-surface font-label font-bold text-sm py-2.5 rounded-DEFAULT hover:bg-surface-container-high transition-colors" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-<!-- Card 2 (Found) -->
-<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_8px_32px_rgba(13,27,42,0.06)] transition-all duration-300">
-<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
-<div class="flex justify-between items-start mb-4">
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-label bg-secondary/10 text-secondary">
-<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span>
-                            FOUND
-                        </span>
-<span class="text-xs font-body text-outline">5 hours ago</span>
-</div>
-<h3 class="text-[1.125rem] font-semibold font-headline text-on-surface mb-2">Black Leather Wallet</h3>
-<div class="flex items-center text-on-surface-variant text-sm font-body mb-4">
-<span class="material-symbols-outlined text-[16px] mr-1.5">location_on</span>
-                        Downtown Metro Station, Platform 2
-                    </div>
-<div class="aspect-video w-full rounded-lg bg-surface-container-low mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-[48px] text-outline opacity-50">account_balance_wallet</span>
-</div>
-<p class="text-[0.875rem] font-body text-on-surface-variant mb-6 line-clamp-2">
-                        Found a black leather men's bi-fold wallet on the bench. Contains some cash and ID cards. Turned in to station security.
-                    </p>
-<a href="item-detail.php" class="w-full bg-surface-container text-on-surface font-label font-bold text-sm py-2.5 rounded-DEFAULT hover:bg-surface-container-high transition-colors" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-<!-- Card 3 (Lost) -->
-<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_8px_32px_rgba(13,27,42,0.06)] transition-all duration-300">
-<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F4A261]"></div>
-<div class="flex justify-between items-start mb-4">
-<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-label bg-[#F4A261]/10 text-[#F4A261]">
-<span class="material-symbols-outlined text-[14px] mr-1">campaign</span>
-                            LOST
-                        </span>
-<span class="text-xs font-body text-outline">1 day ago</span>
-</div>
-<h3 class="text-[1.125rem] font-semibold font-headline text-on-surface mb-2">Silver MacBook Pro</h3>
-<div class="flex items-center text-on-surface-variant text-sm font-body mb-4">
-<span class="material-symbols-outlined text-[16px] mr-1.5">location_on</span>
-                        University Library, 3rd Floor
-                    </div>
-<div class="aspect-video w-full rounded-lg bg-surface-container-low mb-4 overflow-hidden relative">
-<img alt="Silver Apple MacBook laptop sitting open on a wooden desk in a well-lit modern workspace" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Silver Apple MacBook laptop sitting open on a wooden desk in a well-lit modern workspace" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpQvPTHLyo4HDnc7ssCBhZAYMCUd0wbrd6VpXI3K5xEtn2qJq1t8605cSGNCKVqYMyqE2aCNk4jNj-AHbx9xxvHgncOkWDW55SEaGKofbt_diHgGKQI7gXNbGb14jlBJdL13m40ZM2DuIgGCuVKc4-ABF8JgDRkOT9xbz1G8B05gd9rqpDn1wamlyrSX0AoVFnTqnUsitTGmNXdsME6qI-zWPhlVgleIVPeEeKJijH75-JqVQ1NTOh3amI9I_Yjtoh327umYIVeANv"/>
-</div>
-<p class="text-[0.875rem] font-body text-on-surface-variant mb-6 line-clamp-2">
-                        Left my 14-inch MacBook Pro on a desk near the windows. It has a distinctive sticker of a rocket ship on the back.
-                    </p>
-<a href="item-detail.php" class="w-full bg-surface-container text-on-surface font-label font-bold text-sm py-2.5 rounded-DEFAULT hover:bg-surface-container-high transition-colors" style="display:inline-block;text-align:center;">View Details</a>
-</div>
+<?php if (empty($recent_items)): ?>
+    <div class="col-span-full text-center py-12 text-on-surface-variant bg-surface-container-low rounded-xl">
+        <span class="material-symbols-outlined text-4xl opacity-50 mb-4 block">inbox</span>
+        <p>No recent reports found. Help the community by posting lost or found items.</p>
+    </div>
+<?php else: ?>
+    <?php foreach ($recent_items as $item): ?>
+    <?php 
+        $isLost = $item['type'] === 'lost';
+        $themeColorClass = $isLost ? 'text-[#F4A261]' : 'text-secondary';
+        $themeBgClass = $isLost ? 'bg-[#F4A261]/10' : 'bg-secondary/10';
+        $themeLineClass = $isLost ? 'bg-[#F4A261]' : 'bg-secondary';
+        $iconName = $isLost ? 'campaign' : 'check_circle';
+        
+        $imagePath = !empty($item['primary_image']) ? preg_replace('/^\.\.\//', '', $item['primary_image']) : '/assets/img/placeholder.jpg';
+    ?>
+    <div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_8px_32px_rgba(13,27,42,0.06)] transition-all duration-300" onclick="window.location.href='item-detail.php?id=<?= $item['item_id'] ?>'">
+        <!-- Accent Line -->
+        <div class="absolute left-0 top-0 bottom-0 w-1 <?= $themeLineClass ?>"></div>
+        <div class="flex justify-between items-start mb-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-label <?= $themeBgClass ?> <?= $themeColorClass ?>">
+                <span class="material-symbols-outlined text-[14px] mr-1"><?= $iconName ?></span>
+                <?= strtoupper(htmlspecialchars($item['type'])) ?>
+            </span>
+            <span class="text-xs font-body text-outline"><?= date('M j, Y', strtotime($item['created_at'])) ?></span>
+        </div>
+        <h3 class="text-[1.125rem] font-semibold font-headline text-on-surface mb-2 truncate" title="<?= htmlspecialchars($item['title']) ?>"><?= htmlspecialchars($item['title']) ?></h3>
+        <div class="flex items-center text-on-surface-variant text-sm font-body mb-4 truncate">
+            <span class="material-symbols-outlined text-[16px] mr-1.5">location_on</span>
+            <?= htmlspecialchars($item['location_text']) ?>
+        </div>
+        <div class="aspect-video w-full rounded-lg bg-surface-container-low mb-4 overflow-hidden relative flex items-center justify-center">
+            <?php if (!empty($item['primary_image'])): ?>
+                <img alt="Item Image" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<?= htmlspecialchars($imagePath) ?>"/>
+            <?php else: ?>
+                <span class="material-symbols-outlined text-[48px] text-outline opacity-50">image</span>
+            <?php endif; ?>
+        </div>
+        <p class="text-[0.875rem] font-body text-on-surface-variant mb-6 line-clamp-2">
+            <?= htmlspecialchars($item['description']) ?>
+        </p>
+        <a href="item-detail.php?id=<?= $item['item_id'] ?>" class="w-full bg-surface-container text-on-surface font-label font-bold text-sm py-2.5 rounded-DEFAULT hover:bg-surface-container-high transition-colors text-center block">View Details</a>
+    </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 </div>
 <div class="mt-12 text-center sm:hidden">
 <a href="browse.php" class="bg-surface-container text-on-surface font-label font-bold text-sm py-3 px-8 rounded-DEFAULT hover:bg-surface-container-high transition-colors" style="display:inline-block;text-align:center;">View All Items</a>

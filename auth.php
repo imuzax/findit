@@ -1,7 +1,9 @@
 <?php
 session_start();
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'dashboard.php';
+
 if (isset($_SESSION['user_id'])) {
-    header("Location: dashboard.php");
+    header("Location: " . $redirect);
     exit;
 }
 ?>
@@ -248,6 +250,8 @@ async function handleLogin(e) {
     btn.innerText = "Signing in...";
     
     const formData = new FormData(e.target);
+    const redirectUrl = "<?= htmlspecialchars($redirect) ?>";
+    
     try {
         const response = await fetch('api/login.php', {
             method: 'POST',
@@ -257,7 +261,7 @@ async function handleLogin(e) {
         
         if (data.success) {
             showMessage('success', "Login successful! Redirecting...");
-            setTimeout(() => window.location.href = 'index.php', 1000);
+            setTimeout(() => window.location.href = redirectUrl, 1000);
         } else {
             showMessage('error', data.message || "Login failed");
             btn.disabled = false;
@@ -277,6 +281,8 @@ async function handleRegister(e) {
     btn.innerText = "Creating account...";
     
     const formData = new FormData(e.target);
+    const redirectUrl = "<?= htmlspecialchars($redirect) ?>";
+    
     try {
         const response = await fetch('api/register.php', {
             method: 'POST',
@@ -286,7 +292,7 @@ async function handleRegister(e) {
         
         if (data.success) {
             showMessage('success', "Registration successful! Signing you in...");
-            setTimeout(() => window.location.href = 'index.php', 1500);
+            setTimeout(() => window.location.href = redirectUrl, 1500);
         } else {
             showMessage('error', data.message || "Registration failed");
             btn.disabled = false;
