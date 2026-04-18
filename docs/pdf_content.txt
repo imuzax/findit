@@ -1,0 +1,644 @@
+FindIt Platform
+ Complete Implementation Plan
+ HTML · CSS · JavaScript · PHP · MySQL · XAMPP
+ Final Year Project — Full Stack Development Guide
+ 
+ Senior Full-Stack Engineer · 10 Years Experience
+ TABLE OF CONTENTS
+1. Project Overview & Goals
+2. Technology Stack & Environment Setup
+3. Database Schema Design (MySQL)
+4. Folder / File Structure
+5. Module-by-Module Implementation Guide
+6. PHP Backend Architecture
+7. JavaScript & AJAX Implementation
+8. Security Implementation
+9. Testing Strategy
+10. Deployment Checklist
+11. Timeline / Sprint Plan
+12. AI Agent Prompts for Code Generation
+1. PROJECT OVERVIEW & GOALS
+FindIt is a web-based Digital Lost & Found Platform built with PHP/MySQL on XAMPP. It replaces physical notice
+boards with a searchable, image-enabled, and verified digital system that connects item owners with finders
+through smart matching and secure claim verification.
+Allow users to post lost/found items with image, description, and location
+Provide keyword, category, and location-based search with AJAX
+Auto-match lost and found items based on category + location + keywords
+Secure ownership verification via custom questions before item handover
+In-platform messaging between claimant and poster
+Admin panel for moderation, approvals, and analytics
+Full item lifecycle tracking: Lost → Matched → Verified → Returned
+2. TECHNOLOGY STACK & ENVIRONMENT SETUP
+ Layer
+Technology
+Version / Notes
+Web Server
+Apache (via XAMPP)
+XAMPP 8.2+
+Backend
+PHP
+PHP 8.1+ (use PDO for DB)
+Database
+MySQL
+MySQL 8.0+ via phpMyAdmin
+Frontend
+HTML5 + CSS3 + JS ES6+
+No frontend framework
+Styling
+Custom CSS + CSS Variables
+Mobile-first approach
+AJAX
+Vanilla JS fetch() API
+JSON responses from PHP
+File Uploads
+PHP move_uploaded_file()
+Store in /uploads/ folder
+Auth
+PHP Sessions + bcrypt
+password_hash() / verify()
+Icons
+Font Awesome 6 (CDN)
+Free tier sufficient
+Charts (Admin)
+Chart.js (CDN)
+v4.x
+Maps
+Google Maps Embed API
+Free embed iframe
+XAMPP Setup Steps
+Download XAMPP 8.2 from apachefriends.org — install to C:\xampp (Windows) or /opt/lampp (Linux)
+Start Apache and MySQL modules from XAMPP Control Panel
+Open phpMyAdmin at http://localhost/phpmyadmin
+Create database: CREATE DATABASE findit_db CHARACTER SET utf8mb4 COLLATE
+utf8mb4_unicode_ci;
+Place project folder in C:\xampp\htdocs\findit\
+Access project at http://localhost/findit/
+Enable PHP extensions in php.ini: extension=pdo_mysql, extension=gd, extension=fileinfo
+3. DATABASE SCHEMA DESIGN (MySQL)
+Table: users
+Column
+Type
+Notes
+user_id
+INT
+PK, AUTO_INCREMENT
+full_name
+VARCHAR(100)
+NOT NULL
+email
+VARCHAR(150)
+UNIQUE, NOT NULL
+phone
+VARCHAR(20)
+NULL
+password_hash
+VARCHAR(255)
+NOT NULL (bcrypt)
+campus_location
+VARCHAR(100)
+NULL
+profile_photo
+VARCHAR(255)
+NULL (path)
+role
+ENUM('user','admin')
+DEFAULT 'user'
+is_verified
+TINYINT(1)
+DEFAULT 0
+status
+ENUM('active','suspended')
+DEFAULT 'active'
+created_at
+TIMESTAMP
+DEFAULT CURRENT_TIMESTAMP
+Table: items
+Column
+Type
+Notes
+item_id
+INT
+PK, AUTO_INCREMENT
+user_id
+INT
+FK → users.user_id
+type
+ENUM('lost','found')
+NOT NULL
+title
+VARCHAR(150)
+NOT NULL
+description
+TEXT
+NOT NULL
+category
+VARCHAR(50)
+NOT NULL
+color
+VARCHAR(30)
+NULL
+brand
+VARCHAR(80)
+NULL
+date_occurred
+DATE
+NOT NULL
+location_text
+VARCHAR(200)
+NOT NULL
+location_lat
+DECIMAL(10,8)
+NULL
+location_lng
+DECIMAL(11,8)
+NULL
+reward_offered
+VARCHAR(100)
+NULL
+item_currently_at
+VARCHAR(150)
+NULL (found items)
+status
+ENUM('active','matched','verified','returned','rejected')
+DEFAULT 'active'
+admin_approved
+TINYINT(1)
+DEFAULT 0
+created_at
+TIMESTAMP
+DEFAULT CURRENT_TIMESTAMP
+Table: item_images
+Column
+Type
+Notes
+image_id
+INT
+PK, AUTO_INCREMENT
+item_id
+INT
+FK → items.item_id
+image_path
+VARCHAR(255)
+NOT NULL
+is_primary
+TINYINT(1)
+DEFAULT 0
+uploaded_at
+TIMESTAMP
+DEFAULT CURRENT_TIMESTAMP
+Table: claims
+Column
+Type
+Notes
+claim_id
+INT
+PK, AUTO_INCREMENT
+item_id
+INT
+FK → items.item_id
+claimant_user_id
+INT
+FK → users.user_id
+answer_1
+TEXT
+NULL
+answer_2
+TEXT
+NULL
+answer_3
+TEXT
+NULL
+proof_file
+VARCHAR(255)
+NULL
+additional_notes
+TEXT
+NULL
+status
+ENUM('pending','approved','rejected')
+DEFAULT 'pending'
+submitted_at
+TIMESTAMP
+DEFAULT CURRENT_TIMESTAMP
+Table: verification_questions
+Column
+Type
+Notes
+q_id
+INT
+PK, AUTO_INCREMENT
+item_id
+INT
+FK → items.item_id
+question_text
+TEXT
+NOT NULL
+expected_answer
+TEXT
+NOT NULL (hidden from claimant)
+Table: messages
+Column
+Type
+Notes
+message_id
+INT
+PK, AUTO_INCREMENT
+sender_id
+INT
+FK → users.user_id
+receiver_id
+INT
+FK → users.user_id
+item_id
+INT
+FK → items.item_id (context)
+message_text
+TEXT
+NOT NULL
+is_read
+TINYINT(1)
+DEFAULT 0
+sent_at
+TIMESTAMP
+DEFAULT CURRENT_TIMESTAMP
+Table: matches
+Column
+Type
+Notes
+match_id
+INT
+PK, AUTO_INCREMENT
+lost_item_id
+INT
+FK → items.item_id
+found_item_id
+INT
+FK → items.item_id
+match_score
+DECIMAL(5,2)
+0-100 confidence score
+is_confirmed
+TINYINT(1)
+DEFAULT 0
+created_at
+TIMESTAMP
+DEFAULT CURRENT_TIMESTAMP
+4. FOLDER / FILE STRUCTURE
+findit/                          ← Project root (htdocs/findit)
+■■■ index.html                   ← Landing page (static)
+■■■ auth.php                     ← Login / Register
+■■■ dashboard.php                ← User dashboard
+■■■ post-lost.php                ← Post lost item (multi-step form)
+■■■ post-found.php               ← Post found item
+■■■ browse.php                   ← Browse & search listings
+■■■ item-detail.php              ← Single item detail + claim
+■■■ messages.php                 ← In-platform messaging
+■■■ profile.php                  ← User profile page
+■■■ logout.php                   ← Session destroy + redirect
+■
+■■■ admin/
+■   ■■■ index.php                ← Admin dashboard
+■   ■■■ items.php                ← Manage listings
+■   ■■■ users.php                ← Manage users
+■   ■■■ reports.php              ← Analytics & reports
+■
+■■■ includes/
+■   ■■■ db.php                   ← PDO database connection
+■   ■■■ auth_check.php           ← Session check middleware
+■   ■■■ admin_check.php          ← Admin role check
+■   ■■■ header.php               ← Reusable HTML head + navbar
+■   ■■■ footer.php               ← Reusable footer + scripts
+■
+■■■ api/                         ← AJAX JSON endpoints
+■   ■■■ search.php               ← Live search + filters
+■   ■■■ match.php                ← Auto-matching engine
+■   ■■■ send_message.php         ← Send message
+■   ■■■ get_messages.php         ← Poll new messages
+■   ■■■ submit_claim.php         ← Claim submission
+■   ■■■ approve_claim.php        ← Admin approve claim
+■   ■■■ update_status.php        ← Update item status
+■   ■■■ notifications.php        ← Get unread counts
+■
+■■■ assets/
+■   ■■■ css/
+■   ■   ■■■ style.css            ← Global styles + variables
+■   ■   ■■■ components.css       ← Cards, buttons, badges, forms
+■   ■   ■■■ dashboard.css        ← Dashboard sidebar + layout
+■   ■   ■■■ responsive.css       ← All media queries
+■   ■■■ js/
+■   ■   ■■■ app.js               ← Global JS (nav, modals, toasts)
+■   ■   ■■■ search.js            ← AJAX search & filter
+■   ■   ■■■ post-form.js         ← Multi-step form logic
+■   ■   ■■■ messages.js          ← Chat polling & rendering
+■   ■   ■■■ admin.js             ← Admin dashboard charts
+■   ■■■ img/
+■       ■■■ logo.svg
+■       ■■■ hero-illustration.svg
+■       ■■■ empty-state.svg
+■
+■■■ uploads/
+    ■■■ items/                   ← User-uploaded item images (gitignored)
+5. MODULE-BY-MODULE IMPLEMENTATION GUIDE
+Module 1: Authentication (auth.php)
+Step 1: Create users table (see schema above)
+Step 2: Registration: validate inputs server-side, hash password with password_hash($pwd,
+PASSWORD_BCRYPT), insert user, start session
+Step 3: Login: fetch user by email, verify with password_verify(), store user_id + role + name in $_SESSION
+Step 4: All protected pages: require includes/auth_check.php at top (redirects to auth.php if no session)
+Step 5: Logout: session_destroy() then header('Location: index.html')
+Step 6: Password reset: generate token, store in DB with expiry, email link (use PHPMailer or mail())
+Module 2: Post Item Forms (post-lost.php / post-found.php)
+Step 1: Multi-step form in HTML: 4 fieldsets, only active step visible (JS toggles display)
+Step 2: Step navigation: 'Next' validates current step fields via JS before advancing
+Step 3: Image upload: → PHP validates type/size → move_uploaded_file() to uploads/items/
+Step 4: Map integration: Google Maps Embed iframe with location input → store lat/lng via hidden fields
+updated by JS geocoder
+Step 5: On final submit: PHP inserts into items table, then item_images table for each uploaded file
+Step 6: Verification questions: after item is posted, popup modal prompts user to add 2-3 ownership questions
+stored in verification_questions table
+Step 7: Redirect to item-detail.php?id=X with success toast notification
+Module 3: Search & Matching (api/search.php + api/match.php)
+Step 1: Search endpoint: accept GET params (q, category, location, type, status, sort, page)
+Step 2: SQL: use LIKE with prepared statements — WHERE title LIKE ? OR description LIKE ?
+Step 3: Category + status filters: appended to WHERE clause dynamically
+Step 4: Pagination: LIMIT 10 OFFSET (page-1)*10, return total_count for frontend pagination render
+Step 5: Matching algorithm: when new item posted, query items of opposite type, score by: same category
+(+40), keywords overlap in title/description (+30), same location text (+20), same date range (+10)
+Step 6: Insert top matches (score >= 50) into matches table
+Step 7: On browse.php: items with a match show 'Possible Match!' banner and link to matched item
+Module 4: Claim & Verification (item-detail.php + api/submit_claim.php)
+Step 1: Claim button visible only to logged-in users who did NOT post the item
+Step 2: Fetch verification questions for the item via AJAX (do NOT reveal expected answers)
+Step 3: User submits answers + optional proof file → POST to api/submit_claim.php
+Step 4: PHP inserts into claims table with status='pending'
+Step 5: Item poster receives notification (session-based or DB-polled) to review the claim
+Step 6: Poster approves/rejects → api/approve_claim.php updates claim status and item status
+Step 7: On approval: both users notified, item status → 'verified', chat thread opened automatically
+Module 5: Messaging (messages.php + api/)
+Step 1: Load conversation list: SELECT DISTINCT sender/receiver pairs involving current user
+Step 2: Load messages for active conversation: SELECT * FROM messages WHERE (sender=A AND
+receiver=B) OR (sender=B AND receiver=A) ORDER BY sent_at ASC
+Step 3: Send message: POST to api/send_message.php → insert into messages → return new message
+JSON
+Step 4: Poll for new messages: setInterval(() => fetch('api/get_messages.php?after=LAST_ID'), 3000) →
+append new messages to chat
+Step 5: Mark as read: UPDATE messages SET is_read=1 WHERE receiver=current_user AND
+sender=other_user
+Step 6: Unread count badge in navbar polled every 15 seconds via api/notifications.php
+Module 6: Admin Panel (admin/)
+Step 1: Admin check: all admin/*.php files require includes/admin_check.php (checks $_SESSION['role'] ===
+'admin')
+Step 2: Pending items: SELECT * FROM items WHERE admin_approved=0 ORDER BY created_at DESC
+Step 3: Approve: UPDATE items SET admin_approved=1 WHERE item_id=?
+Step 4: Reject/Delete: UPDATE items SET status='rejected' or DELETE with cascade on item_images
+Step 5: User management: list, suspend (UPDATE users SET status='suspended'), unsuspend
+Step 6: Analytics: COUNT queries grouped by category, date, status — feed JSON to Chart.js
+6. PHP BACKEND ARCHITECTURE
+6.1 Database Connection (includes/db.php)
+<?php
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'findit_db');
+try {
+    $pdo = new PDO(
+        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+        DB_USER, DB_PASS,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ]
+    );
+} catch (PDOException $e) {
+    http_response_code(500);
+    die(json_encode(['error' => 'Database connection failed']));
+}
+?>
+6.2 Standard API Response Pattern (all api/*.php files)
+<?php
+header('Content-Type: application/json');
+header('X-Content-Type-Options: nosniff');
+require_once '../includes/db.php';
+require_once '../includes/auth_check.php'; // Ensures user is logged in
+// Only accept POST for write operations
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+// Sanitize all inputs
+$item_id = filter_input(INPUT_POST, 'item_id', FILTER_VALIDATE_INT);
+try {
+    // ... business logic with prepared statements ...
+    echo json_encode(['success' => true, 'data' => $result]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Server error']);
+}
+?>
+6.3 File Upload Helper Pattern
+Validate: check $_FILES['image']['error'] === UPLOAD_ERR_OK
+Validate MIME type: use finfo_file() to check actual file type (not extension)
+Allowed types: image/jpeg, image/png, image/webp — reject anything else
+Max size: enforce 5MB limit (5 * 1024 * 1024 bytes)
+Rename: generate unique filename — uniqid('item_', true) . '.jpg'
+Destination: move_uploaded_file($tmp, '../uploads/items/' . $filename)
+Store relative path '/uploads/items/filename.jpg' in item_images table
+7. JAVASCRIPT & AJAX IMPLEMENTATION
+7.1 Live Search (assets/js/search.js)
+// Debounced live search with AJAX
+const searchInput = document.getElementById('search-input');
+let debounceTimer;
+searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+        const params = new URLSearchParams({
+            q: searchInput.value,
+            category: document.getElementById('category-filter').value,
+            type: document.querySelector('[name="type"]:checked')?.value || '',
+            page: 1
+        });
+        const res = await fetch(`/findit/api/search.php?${params}`);
+        const data = await res.json();
+        renderItemCards(data.items);
+        renderPagination(data.total, data.page);
+    }, 400); // 400ms debounce
+});
+function renderItemCards(items) {
+    const grid = document.getElementById('results-grid');
+    if (!items.length) {
+        grid.innerHTML = '<div class="empty-state">...</div>';
+        return;
+    }
+    grid.innerHTML = items.map(item => `
+        <div class="item-card ${item.type}">
+            <img src="${item.primary_image || '/assets/img/placeholder.jpg'}"
+                 alt="${item.title}" loading="lazy">
+            <div class="card-body">
+                <span class="badge badge-${item.type}">${item.type.toUpperCase()}</span>
+                <h3>${item.title}</h3>
+                <p class="location"><i class="fa fa-map-marker"></i> ${item.location_text}</p>
+                <p class="date">${item.date_occurred}</p>
+                <div class="card-actions">
+                    <a href="/findit/item-detail.php?id=${item.item_id}" class="btn btn-ghost">View Detail
+s</a>
+                    <a href="/findit/messages.php?item=${item.item_id}" class="btn btn-primary">Contact</a
+>
+                </div>
+            </div>
+        </div>`).join('');
+}
+7.2 Toast Notification System (assets/js/app.js)
+Create a in footer.php fixed to bottom-right
+JS function: showToast(message, type='success') — creates div, appends, animates in, auto-removes after 4s
+Types: success (green), error (red), info (teal), warning (amber)
+Trigger on AJAX success/error callbacks and PHP redirect with ?toast=success params
+8. SECURITY IMPLEMENTATION
+Threat
+Implementation
+SQL Injection
+ALWAYS use PDO prepared statements. Never concatenate user input into SQL.
+XSS (Cross-Site Scripting)
+htmlspecialchars() all user-generated output. Use ENT_QUOTES | ENT_HTML5.
+CSRF
+Generate token: $_SESSION['csrf'] = bin2hex(random_bytes(32)). Verify on every POST form.
+Unauthorized Access
+auth_check.php on every protected page. admin_check.php on all admin pages.
+File Upload Attacks
+Validate MIME via finfo, rename files, store outside webroot or restrict execution in uploads/ folder via .htaccess.
+Brute Force Login
+Track failed attempts per IP/email in DB. Lock after 5 failures for 15 minutes.
+Session Hijacking
+session_regenerate_id(true) on login. Set session cookie as HttpOnly + Secure.
+Password Storage
+password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]) — never MD5/SHA1.
+Sensitive Data Exposure
+Hide verification question ANSWERS from all client-side responses. Only compare server-side.
+9. TESTING STRATEGY
+Functional Testing
+User registration with valid and invalid data
+Login with correct/incorrect credentials
+Post lost item form — all 4 steps, validation, image upload
+Search: keywords, category filter, type filter, no-result state
+Claim submission — question answers submitted and stored
+Admin approve/reject item — status updates correctly
+Messages: send, receive, unread count updates
+Security Testing
+Try SQL injection in search input — should return no results, no error exposure
+Try accessing dashboard.php without login — should redirect to auth.php
+Try accessing admin/ pages as regular user — should be blocked
+Submit a form without CSRF token — should be rejected
+Upload a PHP file as 'image' — should be rejected by MIME check
+Responsive Testing
+Test all pages at 1280px, 1024px, 768px, 480px, 375px
+Cards must reflow from 3-col to 1-col correctly
+Sidebar must collapse on mobile
+Forms must be single-column and touch-friendly on mobile
+Browser Testing
+Chrome (latest), Firefox (latest), Edge (latest), Safari (iOS)
+Verify AJAX search works in all browsers
+Verify file upload works on mobile browsers
+10. DEPLOYMENT CHECKLIST
+[ ] Set DB credentials in includes/db.php (never commit to Git with real credentials)
+[ ] Set PHP error_reporting to E_ALL in development, 0 in production
+[ ] Add .htaccess to uploads/items/ to deny PHP execution: Deny from all
+[ ] Ensure uploads/items/ directory has write permissions (chmod 755)
+[ ] Run all SQL CREATE TABLE statements in phpMyAdmin to set up schema
+[ ] Create admin user manually in DB: INSERT with role='admin'
+[ ] Test all AJAX endpoints return correct JSON
+[ ] Verify all images load with correct paths
+[ ] Check all forms submit correctly and validation fires
+[ ] Test admin panel with admin user credentials
+[ ] Enable HTTPS if deploying to live server
+[ ] Disable XAMPP default 'security' page before production deployment
+11. TIMELINE / SPRINT PLAN (8 Weeks)
+Week
+Sprint Goal
+Deliverables
+1
+Setup & Foundation
+XAMPP config, DB schema, folder structure, header/footer includes, CSS variables, base layout
+2
+Authentication
+Register, Login, Logout, session management, password hashing, auth middleware
+3
+Post Item Forms
+Post Lost form (4 steps), Post Found form, image upload, DB insert, verification questions setup
+4
+Browse & Search
+Browse page, AJAX live search, category + type filters, pagination, item cards, empty state
+5
+Item Detail & Matching
+Item detail page, matching algorithm, claim modal, verification question flow, claim submission
+6
+Messaging System
+Conversations list, chat window, send/receive AJAX, unread count polling, read receipts
+7
+Admin Panel
+Admin dashboard, pending items review, user management, approve/reject, Chart.js analytics
+8
+Polish & Testing
+Responsive CSS, security audit, browser testing, bug fixes, documentation, demo preparation
+12. AI AGENT PROMPTS FOR CODE GENERATION
+Use these ready-made prompts with Claude, ChatGPT, or GitHub Copilot to generate each component. Always
+include the project context at the start of each conversation.
+PROJECT CONTEXT (paste this before every AI prompt):
+I am building 'FindIt' — a PHP/MySQL Digital Lost & Found Platform running on XAMPP. Stack: HTML, CSS
+, Vanilla JS (ES6+), PHP 8.1, MySQL 8. Uses PDO for DB, bcrypt for passwords, sessions for auth. Fold
+er root: /findit/ in htdocs. DB name: findit_db.
+Prompt — Database Setup
+Using the schema below, generate the complete MySQL CREATE TABLE SQL for findit_db. Include all forei
+gn keys, indexes on frequently queried columns (category, status, location_text, user_id), and sample
+ INSERT statements for an admin user and 5 test items. [paste schema tables from Section 3]
+Prompt — Authentication System
+Generate a complete PHP authentication system: (1) auth.php with login/register HTML tabs using POST 
+forms, (2) includes/auth_check.php session middleware, (3) api/register.php that validates email uniq
+ueness, hashes password with bcrypt, and returns JSON, (4) api/login.php that verifies credentials an
+d sets $_SESSION. Include CSRF token protection and inline JS validation.
+Prompt — Item Card CSS Component
+Generate the CSS for an .item-card component: white bg, 12px border-radius, box-shadow 0 2px 12px rgb
+a(13,27,42,0.10), hover lifts to 0 8px 28px and translateY(-2px). Has a 4px left border (--color-ambe
+r for lost, --color-teal for found), image thumbnail (aspect-ratio 16/9, object-fit cover), .badge pi
+ll, and two action buttons. Use CSS custom properties: --color-navy: #0D1B2A; --color-teal: #0F7173; 
+--color-amber: #F4A261;
+Prompt — AJAX Search Endpoint
+Generate api/search.php — a PHP endpoint that accepts GET params: q (search term), category, type (lo
+st/found/all), status, page (int, default 1). Uses PDO prepared statements with LIKE for title and de
+scription search. Returns JSON: { success, items: [{item_id, title, type, category, location_text, da
+te_occurred, status, primary_image, user_name}], total, page, per_page: 10 }. Include pagination (LIM
+IT/OFFSET).
+Prompt — Multi-Step Form JS
+Generate the JavaScript for a 4-step multi-step form (post-lost.php). Steps are controlled by data-st
+ep attributes on fieldsets. Next button validates required fields in current step before showing next
+ (adds red border + error message below invalid fields). Progress bar at top updates on each step. Fi
+nal step shows a summary. Include smooth CSS transition between steps.
+Prompt — Matching Algorithm
+Generate a PHP function matchItems($new_item_id, $pdo) that runs after a new item is inserted. It que
+ries items of the opposite type (if new is 'lost', search 'found' and vice versa), scores each candid
+ate out of 100: same category=+40, keyword overlap in title+description=+30, same location_text=+20, 
+date within 7 days=+10. Inserts matches with score >= 50 into the matches table. Return array of matc
+hed item IDs and scores.
+Prompt — Admin Dashboard Charts
+Generate Chart.js code for admin/reports.php with: (1) Bar chart — monthly item posts for last 6 mont
+hs, data fetched via AJAX from api endpoint returning [{month, lost_count, found_count}], teal bars f
+or found, amber for lost. (2) Doughnut chart — breakdown by category. (3) Line chart — weekly recover
+y rate (returned items / total items * 100). All charts responsive, no legend overlap, tooltips showi
+ng values.
+PROJECT SUCCESS TIPS
+Start with the database first. Every module depends on the schema. Get it right before writing a single line of
+PHP.
+Build includes/db.php and includes/auth_check.php on Day 1. Every other file needs them.
+Test each API endpoint with browser URL or Postman before building the frontend that calls it.
+Use Git from Day 1. Commit after every working feature. Branches: main, dev, feature/auth, feature/search
+etc.
+Mobile-first CSS. Write base styles for 375px, then use min-width media queries to scale up. This prevents
+responsive bugs.
+Never skip CSRF tokens on forms. It's 4 lines of code and prevents a real exam-day question.
+For your viva: Be ready to explain the matching algorithm, the claim verification flow, and why you used PDO
+prepared statements for security.
+Demo data matters. Seed your DB with 20-30 realistic items across multiple categories and locations. An
+empty demo looks incomplete.
+ Good luck with your final year project! ■
+ Build it clean, secure, and responsive — and it will stand out.
+ 
