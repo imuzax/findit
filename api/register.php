@@ -14,8 +14,6 @@ $fullName = sanitizeInput($_POST['full_name'] ?? '');
 $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
 $password = $_POST['password'] ?? '';
 $phone = sanitizeInput($_POST['phone'] ?? '');
-$department = sanitizeInput($_POST['department'] ?? '');
-$rollNumber = sanitizeInput($_POST['roll_number'] ?? '');
 
 // Validation
 if (empty($fullName) || empty($email) || empty($password)) {
@@ -42,16 +40,13 @@ try {
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
     // Insert user
-    $insertStmt = $pdo->prepare("INSERT INTO users (full_name, email, phone, password_hash, department, roll_number) VALUES (?, ?, ?, ?, ?, ?)");
-    $insertStmt->execute([$fullName, $email, $phone, $passwordHash, $department, $rollNumber]);
+    $insertStmt = $pdo->prepare("INSERT INTO users (full_name, email, phone, password_hash) VALUES (?, ?, ?, ?)");
+    $insertStmt->execute([$fullName, $email, $phone, $passwordHash]);
     $userId = $pdo->lastInsertId();
 
     // Auto-login after registration
     $_SESSION['user_id'] = $userId;
     $_SESSION['full_name'] = $fullName;
-    $_SESSION['phone'] = $phone;
-    $_SESSION['department'] = $department;
-    $_SESSION['roll_number'] = $rollNumber;
     $_SESSION['role'] = 'user';
 
     jsonResponse(true, ['user_id' => $userId, 'role' => 'user'], 'Registration successful.');

@@ -1,16 +1,17 @@
 <?php 
 require_once 'includes/auth_check.php'; 
-$pageTitle = 'Report a Lost Item';
-$pageSubtitle = 'Provide details about the item you lost. The more descriptive you are, the higher the chances of a successful return.';
-$themeColor = 'text-[#F4A261]';
-$borderColor = 'border-[#F4A261]';
+$reportType = isset($_GET['type']) && $_GET['type'] === 'found' ? 'found' : 'lost';
+$pageTitle = $reportType === 'found' ? 'Report a Found Item' : 'Report a Lost Item';
+$pageSubtitle = $reportType === 'found' ? 'Help reunite an item with its rightful owner. Please be descriptive.' : 'Provide details about the item you lost. The more descriptive you are, the higher the chances of a successful return.';
+$themeColor = $reportType === 'found' ? 'text-[#0F7173]' : 'text-[#F4A261]';
+$borderColor = $reportType === 'found' ? 'border-[#0F7173]' : 'border-[#F4A261]';
 ?>
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>FindIt - Report Lost Item (Azam Campus)</title>
+<title>FindIt - Post Lost Item</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -126,12 +127,12 @@ $borderColor = 'border-[#F4A261]';
 </div>
 </div>
 <form id="reportForm" class="bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.06)] p-8 md:p-12 space-y-10 border-l-4 <?= $borderColor ?>">
-<input type="hidden" name="type" value="lost" />
+<input type="hidden" name="type" value="<?= $reportType ?>" />
 <div class="space-y-6">
 <h2 class="text-2xl font-bold text-primary">Item Details</h2>
 <div class="space-y-2">
 <label class="block text-sm font-semibold text-primary" for="item-name">Item Name <span class="text-error">*</span></label>
-<input name="title" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary placeholder:text-on-primary-container transition-all" id="item-name" placeholder="e.g., Blue College ID Card, Scientific Calculator, Backpack" required="" type="text"/>
+<input name="title" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary placeholder:text-on-primary-container transition-all" id="item-name" placeholder="e.g., Black Leather Wallet, Silver iPhone 13" required="" type="text"/>
 </div>
 <div class="space-y-3">
 <label class="block text-sm font-semibold text-primary">Category</label>
@@ -161,8 +162,8 @@ $borderColor = 'border-[#F4A261]';
 <div class="rounded-full px-4 py-2 text-center text-sm font-medium bg-surface-container-high text-on-surface hover:bg-surface-dim transition-colors peer-checked:bg-primary peer-checked:text-white">Jewelry</div>
 </label>
 <label class="cursor-pointer">
-<input class="peer sr-only" name="category" type="radio" value="Books & Documents"/>
-<div class="rounded-full px-4 py-2 text-center text-sm font-medium bg-surface-container-high text-on-surface hover:bg-surface-dim transition-colors peer-checked:bg-primary peer-checked:text-white">Books & Docs</div>
+<input class="peer sr-only" name="category" type="radio" value="Pets"/>
+<div class="rounded-full px-4 py-2 text-center text-sm font-medium bg-surface-container-high text-on-surface hover:bg-surface-dim transition-colors peer-checked:bg-primary peer-checked:text-white">Pets</div>
 </label>
 <label class="cursor-pointer">
 <input class="peer sr-only" name="category" type="radio" value="Other"/>
@@ -172,7 +173,7 @@ $borderColor = 'border-[#F4A261]';
 </div>
 <div class="space-y-2 mt-6">
 <label class="block text-sm font-semibold text-primary" for="location">Location <span class="text-error">*</span></label>
-<input name="location_text" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary placeholder:text-on-primary-container transition-all" id="location" placeholder="e.g., Abeda Inamdar College Library, Ground, Masjid Area" required="" type="text"/>
+<input name="location_text" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary placeholder:text-on-primary-container transition-all" id="location" placeholder="e.g., Central Park, Downtown Cafe" required="" type="text"/>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -185,27 +186,14 @@ $borderColor = 'border-[#F4A261]';
         <input name="brand" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary" id="brand" placeholder="e.g., Apple" type="text"/>
     </div>
     <div class="space-y-2 md:col-span-2">
-        <label class="block text-sm font-semibold text-primary" for="reward">Reward Offered <span class="text-xs text-on-surface-variant font-normal">(Optional)</span></label>
-        <input name="reward_offered" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary" id="reward" placeholder="e.g., Small cash reward or Treat" type="text"/>
-    </div>
-    <div class="space-y-2 md:col-span-2">
         <label class="block text-sm font-semibold text-primary" for="date">Date Occurred <span class="text-error">*</span></label>
         <input name="date_occurred" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary" id="date" required type="date" value="<?= date('Y-m-d') ?>"/>
     </div>
 </div>
 
-<div class="space-y-6 pt-6 relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-surface-container-high before:content-['']">
-<h2 class="text-2xl font-bold text-primary">Your Contact Information</h2>
-<p class="text-sm text-on-surface-variant">This information will be shown to others so they can contact you directly.</p>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="space-y-2">
-        <label class="block text-sm font-semibold text-primary" for="contact_name">Display Name <span class="text-error">*</span></label>
-        <input name="contact_name" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary" id="contact_name" required type="text" value="<?= htmlspecialchars($_SESSION['full_name'] ?? '') ?>"/>
-    </div>
-    <div class="space-y-2">
-        <label class="block text-sm font-semibold text-primary" for="contact_phone">Contact Number <span class="text-error">*</span></label>
-        <input name="contact_phone" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary" id="contact_phone" required type="text" value="<?= htmlspecialchars($_SESSION['phone'] ?? '') ?>" placeholder="e.g., 9876543210"/>
-    </div>
+<div class="space-y-2 mt-4">
+<label class="block text-sm font-semibold text-primary" for="item-description">Detailed Description <span class="text-error">*</span></label>
+<textarea name="description" class="w-full px-4 py-3 rounded-DEFAULT bg-surface border-none focus:ring-2 focus:ring-[#0F7173] text-primary placeholder:text-on-primary-container transition-all resize-none" id="item-description" placeholder="Mention specific identifying marks, colors, brands, or contents..." rows="4" required></textarea>
 </div>
 </div>
 <div class="space-y-6 pt-6 relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-surface-container-high before:content-['']">
@@ -220,7 +208,6 @@ $borderColor = 'border-[#F4A261]';
 <span class="text-xs text-outline font-medium">Supports JPG, PNG (Max 5MB)</span>
 <input name="images[]" id="file_upload" accept="image/*" class="hidden" multiple="" type="file"/>
 </div>
-<div id="imagePreviewContainer" class="hidden mt-4 flex gap-4 overflow-x-auto pb-2"></div>
 </div>
 <div class="flex justify-end pt-8 relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-surface-container-high before:content-['']">
 <button id="submitBtn" class="bg-primary text-white font-bold tracking-tight px-8 py-3 rounded-DEFAULT shadow-[0_4px_14px_0_rgba(13,27,42,0.39)] hover:shadow-[0_6px_20px_rgba(13,27,42,0.23)] hover:bg-primary-container transition duration-200 bg-gradient-to-br from-[#0D1B2A] to-[#0f1c2c] flex items-center gap-2" type="submit">
@@ -242,32 +229,10 @@ $borderColor = 'border-[#F4A261]';
 
     document.getElementById('file_upload').addEventListener('change', function() {
         const fileCount = this.files.length;
-        const previewContainer = document.getElementById('imagePreviewContainer');
-        
         if(fileCount > 0) {
             document.querySelector('.group.cursor-pointer p.mb-1').innerText = fileCount + ' file(s) selected';
-            
-            // Create image previous
-            previewContainer.innerHTML = ''; // clear existing
-            previewContainer.classList.remove('hidden');
-            
-            Array.from(this.files).forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'w-24 h-24 object-cover rounded-lg shadow-sm border border-outline-variant';
-                        previewContainer.appendChild(img);
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-            
         } else {
             document.querySelector('.group.cursor-pointer p.mb-1').innerText = 'Drag and drop images here';
-            previewContainer.innerHTML = '';
-            previewContainer.classList.add('hidden');
         }
     });
 

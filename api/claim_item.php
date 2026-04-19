@@ -38,7 +38,7 @@ try {
         exit;
     }
 
-    if (in_array($item['status'], ['returned', 'resolved'])) {
+    if (in_array($item['status'], ['returned', 'recovered', 'resolved'])) {
         echo json_encode(['success' => false, 'message' => 'This item is already resolved.']);
         exit;
     }
@@ -55,7 +55,6 @@ try {
     $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_user_id, status) VALUES (?, ?, 'pending')");
     $stmt->execute([$item_id, $user_id]);
 
-    /*
     // Generate auto-message based on item type
     $owner_id = $item['user_id'];
     $item_title = $item['title'];
@@ -68,7 +67,6 @@ try {
     // Insert starter message
     $stmtMsg = $pdo->prepare("INSERT INTO messages (sender_id, receiver_id, item_id, message_text) VALUES (?, ?, ?, ?)");
     $stmtMsg->execute([$user_id, $owner_id, $item_id, $msg_text]);
-    */
 
     // Optional: We can also update item status to 'matched' just to show activity.
     // $stmt = $pdo->prepare("UPDATE items SET status = 'matched' WHERE item_id = ? AND status = 'active'");

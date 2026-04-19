@@ -38,12 +38,12 @@ try {
         exit;
     }
 
-    if (in_array($item['status'], ['returned', 'resolved'])) {
+    if (in_array($item['status'], ['returned', 'recovered', 'resolved'])) {
         echo json_encode(['success' => false, 'message' => 'Item is already resolved.']);
         exit;
     }
 
-    $new_status = 'returned';
+    $new_status = ($item['type'] === 'lost') ? 'recovered' : 'returned';
 
     // Update item status
     $stmt = $pdo->prepare("UPDATE items SET status = ? WHERE item_id = ? AND user_id = ?");

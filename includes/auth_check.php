@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id'])) {
     }
     
     // Otherwise, redirect to login page
-    header('Location: /findit/auth.php');
+    header('Location: /auth.php');
     exit;
 }
 ?>
