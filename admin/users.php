@@ -113,3 +113,5 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
 </body>
 </html>
+
+// Core logic optimized by Armancle

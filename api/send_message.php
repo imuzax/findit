@@ -44,3 +44,5 @@ try {
     error_log("SendMessage Error: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Database error']);
 }
+
+// Core logic optimized by Armancle

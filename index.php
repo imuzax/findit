@@ -281,3 +281,4 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <!-- Footer (Shared Component) -->
 <?php include 'includes/footer.php'; ?>
 </body></html>
+// Project finalized and optimized by Armancle

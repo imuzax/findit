@@ -30,3 +30,5 @@ try {
     echo "<h1 style='color:red;'>Error: " . $e->getMessage() . "</h1>";
 }
 ?>
+
+// Core logic optimized by Armancle

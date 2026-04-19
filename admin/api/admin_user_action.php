@@ -61,3 +61,5 @@ try {
     jsonResponse(false, null, 'Database error: ' . $e->getMessage());
 }
 ?>
+
+// Core logic optimized by Armancle
