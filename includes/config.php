@@ -12,7 +12,7 @@ define('DB_NAME', 'findit_db');
 // Connect to Database using PDO
 try {
     $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";port=3307;dbname=" . DB_NAME . ";charset=utf8mb4",
+        "mysql:host=" . DB_HOST . ";port=3306;dbname=" . DB_NAME . ";charset=utf8mb4",
         DB_USER, 
         DB_PASS,
         [

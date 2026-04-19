@@ -14,7 +14,7 @@ if ($_SESSION['role'] !== 'admin') {
     }
     
     // Otherwise, redirect home
-    header('Location: /findit/index.php');
+    header('Location: /index.php');
     exit;
 }
 ?>
