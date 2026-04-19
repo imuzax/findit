@@ -102,7 +102,7 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <main>
 <!-- Hero Section -->
 <section class="relative pt-24 pb-32 px-8 overflow-hidden bg-primary-container text-on-primary">
-<div class="absolute inset-0 bg-gradient-to-br from-primary to-primary-container opacity-90 z-0 pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-primary to-primary-container opacity-95 z-0 pointer-events-none"></div>
 <!-- Abstract decorative elements -->
 <div class="absolute top-1/4 -left-20 w-96 h-96 bg-secondary/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
 <div class="absolute bottom-0 right-10 w-80 h-80 bg-[#F4A261]/10 rounded-full blur-3xl z-0 pointer-events-none"></div>
