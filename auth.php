@@ -99,8 +99,8 @@ if (isset($_SESSION['user_id'])) {
 <div class="absolute inset-0 opacity-20 bg-gradient-to-br from-[#0f1c2c] to-[#0D1B2A]"></div>
 <div class="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-secondary opacity-5 blur-3xl"></div>
 <div class="relative z-10">
-<h1 class="font-headline font-extrabold text-on-primary text-4xl tracking-tight mb-2">FindIt</h1>
-<p class="font-body text-inverse-primary text-lg font-medium">Digital Concierge</p>
+<h1 class="font-headline font-extrabold text-on-primary text-4xl tracking-tight mb-2">FindIt Azam Campus</h1>
+<p class="font-body text-inverse-primary text-lg font-medium">Digital Lost & Found</p>
 </div>
 <div class="relative z-10 max-w-md">
 <h2 class="font-headline font-extrabold text-on-primary text-[3.5rem] leading-[1.1] tracking-[-0.02em] mb-6">
@@ -122,7 +122,7 @@ if (isset($_SESSION['user_id'])) {
 <div class="w-full lg:w-1/2 bg-surface-container-lowest flex flex-col justify-center items-center p-8 sm:p-16 relative overflow-y-auto">
 <!-- Mobile Brand Header (Visible only on mobile) -->
 <div class="lg:hidden absolute top-8 left-8">
-<h1 class="font-headline font-extrabold text-[#0D1B2A] text-2xl tracking-tight">FindIt</h1>
+<h1 class="font-headline font-extrabold text-[#0D1B2A] text-2xl tracking-tight">FindIt Azam Campus</h1>
 </div>
 <div class="w-full max-w-md mt-16 lg:mt-0">
 <!-- Header -->
@@ -169,15 +169,25 @@ if (isset($_SESSION['user_id'])) {
 <form id="register-form" class="hidden flex flex-col gap-6" onsubmit="handleRegister(event)">
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-name">Full Name</label>
-<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-name" name="full_name" placeholder="John Doe" type="text" required/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-name" name="full_name" placeholder="e.g., Arman Khan" type="text" required/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-email">Email Address</label>
-<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-email" name="email" placeholder="john@example.com" type="email" required/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-email" name="email" placeholder="arman.student@azamcampus.com" type="email" required/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-phone">Phone Number</label>
-<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-phone" name="phone" placeholder="0987654321" type="text"/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-phone" name="phone" placeholder="e.g., 9876543210" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+    <div class="flex flex-col gap-2">
+    <label class="font-label font-semibold text-on-background text-sm" for="reg-dept">Department</label>
+    <input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-dept" name="department" placeholder="e.g., BCA, B.Sc" type="text"/>
+    </div>
+    <div class="flex flex-col gap-2">
+    <label class="font-label font-semibold text-on-background text-sm" for="reg-roll">Roll Number</label>
+    <input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-roll" name="roll_number" placeholder="e.g., 1234" type="text"/>
+    </div>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-password">Password (Min 6 chars)</label>

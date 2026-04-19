@@ -1,3 +1,21 @@
+<?php
+session_start();
+require_once 'includes/config.php';
+
+// Build basic query to fetch all active items
+$query = "
+    SELECT i.*, 
+           (SELECT image_path FROM item_images WHERE item_id = i.item_id ORDER BY is_primary DESC LIMIT 1) as primary_image
+    FROM items i
+    WHERE i.status IN ('active', 'matched', 'verified')
+    ORDER BY i.created_at DESC
+";
+
+$stmt = $pdo->prepare($query);
+$stmt->execute();
+$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$total_count = count($items);
+?>
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
@@ -113,7 +131,7 @@
 </label>
 <label class="flex items-center gap-3 cursor-pointer group">
 <input class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary/50 bg-surface-container-lowest" type="checkbox"/>
-<span class="text-sm text-on-surface-variant group-hover:text-primary transition-colors">Pets (7)</span>
+<span class="text-sm text-on-surface-variant group-hover:text-primary transition-colors">Books & Docs (7)</span>
 </label>
 <label class="flex items-center gap-3 cursor-pointer group">
 <input class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary/50 bg-surface-container-lowest" type="checkbox"/>
@@ -140,7 +158,7 @@
 <h3 class="font-headline font-semibold text-lg mb-4">Location</h3>
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-size: 20px;">location_on</span>
-<input class="w-full pl-10 pr-4 py-2 rounded-DEFAULT border-none bg-surface-container-low text-sm focus:ring-2 focus:ring-secondary/50" placeholder="City or zip code..." type="text"/>
+<input class="w-full pl-10 pr-4 py-2 rounded-DEFAULT border-none bg-surface-container-low text-sm focus:ring-2 focus:ring-secondary/50" placeholder="e.g., Abeda Inamdar College..." type="text"/>
 </div>
 </div>
 <button class="w-full py-3 bg-surface-container-low text-primary font-semibold rounded-DEFAULT hover:bg-surface-container transition-colors text-sm">Reset Filters</button>
@@ -151,10 +169,10 @@
 <div class="mb-8 space-y-6">
 <div class="relative">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="w-full pl-12 pr-4 py-4 rounded-xl border-none bg-surface-container-lowest shadow-[0_8px_32px_rgba(13,27,42,0.06)] text-lg placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-secondary/50 transition-shadow" placeholder="Search for 'MacBook Pro' or 'Golden Retriever'..." type="text"/>
+<input class="w-full pl-12 pr-4 py-4 rounded-xl border-none bg-surface-container-lowest shadow-[0_8px_32px_rgba(13,27,42,0.06)] text-lg placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-secondary/50 transition-shadow" placeholder="Search for 'ID Card', 'Calculator' or 'Lab Manual'..." type="text"/>
 </div>
 <div class="flex justify-between items-center">
-<h1 class="text-2xl font-bold text-primary">Browse Listings <span class="text-on-surface-variant text-lg font-normal ml-2">92 results</span></h1>
+<h1 class="text-2xl font-bold text-primary">Browse Listings <span class="text-on-surface-variant text-lg font-normal ml-2"><?= $total_count ?> results</span></h1>
 <div class="flex items-center gap-2">
 <span class="text-sm font-semibold text-on-surface-variant">Sort by:</span>
 <select class="bg-transparent border-none text-sm font-semibold text-primary focus:ring-0 cursor-pointer pr-8 py-1">
@@ -167,88 +185,37 @@
 </div>
 <!-- Item Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-<!-- Card 1: Found Item -->
-<article class="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(13,27,42,0.04)] overflow-hidden border-l-4 border-l-[#0F7173] flex flex-col hover:-translate-y-1 transition-transform duration-300 relative group">
-<div class="h-48 w-full bg-surface-container-low relative overflow-hidden">
-<img alt="Black wireless headphones sitting on a wooden bench" class="w-full h-full object-cover" data-alt="black over-ear wireless headphones resting on a weathered wooden park bench with dappled sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwNuHAIyNkAH8uk7w_vgmlNOqCrvbcLEjgUllwSejEmaLRfsgieHbednh5h7WpgaXljr2rKhLEDvYIT4yz0XbBaYwfr9SaWEyxFdseSc90de6KjZvG8xZT4bEOYdLPstQOW7zS83hZPht8f03Y_WUmqQLfo30a_24gwSb36IWr11lajlqg8XfYv9oavRBJHms94ODfRVRMPmhuUCySe-2KV5feoZPPn2e9MJntlcldtIY5gdghYuc5d_1XAl_TsMAMrKGS72cY5oc4"/>
-<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#0F7173] shadow-sm uppercase tracking-wider">Found</div>
-</div>
-<div class="p-6 flex-grow flex flex-col">
-<h2 class="text-lg font-semibold text-primary mb-2 line-clamp-1">Sony WH-1000XM4 Headphones</h2>
-<div class="flex items-center gap-2 text-on-surface-variant text-sm mb-4">
-<span class="material-symbols-outlined" style="font-size: 16px;">location_on</span>
-<span class="truncate">Centennial Park, near the fountain</span>
-</div>
-<p class="text-sm text-on-surface-variant mb-6 line-clamp-2 leading-relaxed">Found these sitting on a bench near the main entrance fountain. They are in a black carrying case.</p>
-<div class="mt-auto pt-4 flex items-center justify-between">
-<span class="text-xs font-semibold text-on-surface-variant">Today, 2:30 PM</span>
-<a href="item-detail.php" class="text-sm font-semibold text-[#0F7173] hover:underline underline-offset-4" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-</div>
-</article>
-<!-- Card 2: Lost Item with Possible Match Banner -->
-<article class="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(13,27,42,0.04)] overflow-hidden border-l-4 border-l-[#F4A261] flex flex-col hover:-translate-y-1 transition-transform duration-300 relative">
-<!-- Amber Banner -->
-<div class="bg-[#F4A261]/10 text-[#bb7336] px-4 py-2 text-xs font-bold flex items-center gap-2 uppercase tracking-wider">
-<span class="material-symbols-outlined" style="font-size: 14px; font-variation-settings: 'FILL' 1;">stars</span>
-                        Possible Match!
-                    </div>
-<div class="h-40 w-full bg-surface-container-low relative overflow-hidden">
-<img alt="Brown leather wallet open on a table" class="w-full h-full object-cover" data-alt="classic brown leather bi-fold men's wallet slightly open on a white cafe table top down view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_YWmcbR8aDi1e6GV2kO3EnUM2JIA-y0S7f9xBE5Jo-ncxeg-gE_vZ2epDHKgS92Ua7Wpp4ylSOtSAxo9npxrWj9oGJ2Gv3PUpZXrOA3zHCu9UdPqn9T2U8EJwjFRWY9k5HEc9VQsrs4EZ-LwG5yv5HhpthJmZF6CxfdffWe1Z8f6W0BSgxNGEXLPQ6t-KOZoYpbjYXeCVLdU971ZWrqEt_vZqpDo8sOMcZtOb__eocZzb__JiL-ZWsHpgYHRUe9fq1poHbqySswdE"/>
-<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#F4A261] shadow-sm uppercase tracking-wider">Lost</div>
-</div>
-<div class="p-6 flex-grow flex flex-col">
-<h2 class="text-lg font-semibold text-primary mb-2 line-clamp-1">Brown Leather Wallet</h2>
-<div class="flex items-center gap-2 text-on-surface-variant text-sm mb-4">
-<span class="material-symbols-outlined" style="font-size: 16px;">location_on</span>
-<span class="truncate">Downtown Transit Center</span>
-</div>
-<p class="text-sm text-on-surface-variant mb-6 line-clamp-2 leading-relaxed">Lost my wallet somewhere between the bus stop and the coffee shop. Contains ID and cards.</p>
-<div class="mt-auto pt-4 flex items-center justify-between">
-<span class="text-xs font-semibold text-on-surface-variant">Yesterday</span>
-<a href="item-detail.php" class="text-sm font-semibold text-primary hover:underline underline-offset-4" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-</div>
-</article>
-<!-- Card 3: Found Item -->
-<article class="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(13,27,42,0.04)] overflow-hidden border-l-4 border-l-[#0F7173] flex flex-col hover:-translate-y-1 transition-transform duration-300 relative">
-<div class="h-48 w-full bg-surface-container-low relative overflow-hidden flex items-center justify-center bg-surface-container">
-<!-- Fallback for no image -->
-<span class="material-symbols-outlined text-outline-variant" style="font-size: 48px;">key</span>
-<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#0F7173] shadow-sm uppercase tracking-wider">Found</div>
-</div>
-<div class="p-6 flex-grow flex flex-col">
-<h2 class="text-lg font-semibold text-primary mb-2 line-clamp-1">Set of House Keys</h2>
-<div class="flex items-center gap-2 text-on-surface-variant text-sm mb-4">
-<span class="material-symbols-outlined" style="font-size: 16px;">location_on</span>
-<span class="truncate">Main St. Library Steps</span>
-</div>
-<p class="text-sm text-on-surface-variant mb-6 line-clamp-2 leading-relaxed">Three keys on a generic silver ring with a small blue plastic tag.</p>
-<div class="mt-auto pt-4 flex items-center justify-between">
-<span class="text-xs font-semibold text-on-surface-variant">Oct 24</span>
-<a href="item-detail.php" class="text-sm font-semibold text-[#0F7173] hover:underline underline-offset-4" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-</div>
-</article>
-<!-- Card 4: Lost Item -->
-<article class="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(13,27,42,0.04)] overflow-hidden border-l-4 border-l-[#F4A261] flex flex-col hover:-translate-y-1 transition-transform duration-300 relative group">
-<div class="h-48 w-full bg-surface-container-low relative overflow-hidden">
-<img alt="Orange tabby cat looking up" class="w-full h-full object-cover" data-alt="close up of a fluffy orange tabby cat looking upwards with bright green eyes indoors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Lt75eoS7PB1Pe8wQIaPPVMCZnbWnJ0NZ6fXrvD_bYQNhdYe7tgBjLowPVB4z3Vqwel_zOZw8Vc4ExonLH_QeOaiW4afI2kUKXE47Wj__b-y34uH90clg6deM9GoBwRm4N-c_wOMebp4I2ZkVZd2WsJHFITFW_eickbY5_wPCMcUJAryOSYXGZRaHsRRBqbsEkY0y0wxpK7nYoTPLl_g4i9KvgfaZmeYaa6iylpu8xmPKWXSHJ5vVczT1MU1rga0K2iSP0XINqiNI"/>
-<div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#F4A261] shadow-sm uppercase tracking-wider">Lost</div>
-</div>
-<div class="p-6 flex-grow flex flex-col">
-<h2 class="text-lg font-semibold text-primary mb-2 line-clamp-1">Orange Tabby Cat - "Milo"</h2>
-<div class="flex items-center gap-2 text-on-surface-variant text-sm mb-4">
-<span class="material-symbols-outlined" style="font-size: 16px;">location_on</span>
-<span class="truncate">Maplewood Neighborhood</span>
-</div>
-<p class="text-sm text-on-surface-variant mb-6 line-clamp-2 leading-relaxed">Milo slipped out the back door. Very friendly but might be scared. Wearing a blue collar.</p>
-<div class="mt-auto pt-4 flex items-center justify-between">
-<span class="text-xs font-semibold text-on-surface-variant">Oct 22</span>
-<a href="item-detail.php" class="text-sm font-semibold text-primary hover:underline underline-offset-4" style="display:inline-block;text-align:center;">View Details</a>
-</div>
-</div>
-</article>
+<?php foreach ($items as $item): ?>
+    <?php 
+        $isLost = $item['type'] === 'lost';
+        $themeColor = $isLost ? '#F4A261' : '#0F7173';
+        $imagePath = !empty($item['primary_image']) ? ltrim($item['primary_image'], '/') : '/assets/img/placeholder.jpg';
+    ?>
+    <article onclick="window.location.href='item-detail.php?id=<?= $item['item_id'] ?>'" class="bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(13,27,42,0.04)] overflow-hidden border-l-4 border-l-[<?= $themeColor ?>] flex flex-col hover:-translate-y-1 transition-transform duration-300 relative group cursor-pointer">
+        <div class="h-48 w-full bg-surface-container-low relative overflow-hidden flex items-center justify-center">
+            <?php if (!empty($item['primary_image'])): ?>
+                <img alt="<?= htmlspecialchars($item['title']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<?= htmlspecialchars($imagePath) ?>"/>
+            <?php else: ?>
+                <span class="material-symbols-outlined text-[48px] text-outline-variant opacity-50">
+                    <?= $isLost ? 'help_center' : 'visibility' ?>
+                </span>
+            <?php endif; ?>
+            <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[<?= $themeColor ?>] shadow-sm uppercase tracking-wider"><?= htmlspecialchars($item['type']) ?></div>
+        </div>
+        <div class="p-6 flex-grow flex flex-col">
+            <h2 class="text-lg font-semibold text-primary mb-2 line-clamp-1"><?= htmlspecialchars($item['title']) ?></h2>
+            <div class="flex items-center gap-2 text-on-surface-variant text-sm mb-4">
+                <span class="material-symbols-outlined" style="font-size: 16px;">location_on</span>
+                <span class="truncate"><?= htmlspecialchars($item['location_text']) ?></span>
+            </div>
+            <p class="text-sm text-on-surface-variant mb-6 line-clamp-2 leading-relaxed"><?= htmlspecialchars($item['description']) ?></p>
+            <div class="mt-auto pt-4 flex items-center justify-between">
+                <span class="text-xs font-semibold text-on-surface-variant"><?= date('M j, Y', strtotime($item['created_at'])) ?></span>
+                <a href="item-detail.php?id=<?= $item['item_id'] ?>" class="text-sm font-semibold text-[<?= $themeColor ?>] hover:underline underline-offset-4" style="display:inline-block;text-align:center;">View Details</a>
+            </div>
+        </div>
+    </article>
+<?php endforeach; ?>
 </div>
 <!-- Pagination -->
 <div class="mt-16 flex items-center justify-center gap-2">

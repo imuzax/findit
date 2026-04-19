@@ -207,7 +207,7 @@ $my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </section>
 <!-- Quick Actions -->
 <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-<a href="post-lost.php?type=lost" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#F4A261] to-[#d9823f] shadow-[0_8px_32px_rgba(244,162,97,0.2)] block">
+<a href="post-lost.php" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#F4A261] to-[#d9823f] shadow-[0_8px_32px_rgba(244,162,97,0.2)] block">
 <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 <div class="relative z-10 text-white">
 <span class="material-symbols-outlined text-4xl mb-4 block" data-icon="search_hands_free">search_hands_free</span>
@@ -215,7 +215,7 @@ $my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <p class="text-white/90 text-sm">Alert the community to help you find what you have lost.</p>
 </div>
 </a>
-<a href="post-lost.php?type=found" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#0F7173] to-[#0a4e50] shadow-[0_8px_32px_rgba(15,113,115,0.2)] block">
+<a href="post-found.php" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#0F7173] to-[#0a4e50] shadow-[0_8px_32px_rgba(15,113,115,0.2)] block">
 <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 <div class="relative z-10 text-white">
 <span class="material-symbols-outlined text-4xl mb-4 block" data-icon="volunteer_activism">volunteer_activism</span>
