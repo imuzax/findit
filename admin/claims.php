@@ -70,3 +70,5 @@ $claims = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 </body>
 </html>
+
+// Core logic optimized by Armancle

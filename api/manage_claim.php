@@ -83,3 +83,5 @@ try {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 ?>
+
+// Core logic optimized by Armancle

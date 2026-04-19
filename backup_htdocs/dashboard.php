@@ -5,13 +5,9 @@ require_once 'includes/auth_check.php';
 $user_id = $_SESSION['user_id'];
 
 // Get counts
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM items WHERE user_id = ? AND type = 'lost'");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM items WHERE user_id = ?");
 $stmt->execute([$user_id]);
-$lost_count = $stmt->fetchColumn();
-
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM items WHERE user_id = ? AND type = 'found'");
-$stmt->execute([$user_id]);
-$found_count = $stmt->fetchColumn();
+$total_posts = $stmt->fetchColumn();
 
 $stmt = $pdo->prepare("SELECT COUNT(*) FROM items WHERE user_id = ? AND status = 'returned'");
 $stmt->execute([$user_id]);
@@ -21,9 +17,9 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id IN (SELECT item
 $stmt->execute([$user_id]);
 $pending_claims = $stmt->fetchColumn();
 
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id IN (SELECT item_id FROM items WHERE user_id = ?) AND status = 'pending'");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE receiver_id = ? AND is_read = 0");
 $stmt->execute([$user_id]);
-$pending_claims_count = $stmt->fetchColumn();
+$unread_messages = $stmt->fetchColumn();
 
 // Get active reports
 $stmt = $pdo->prepare("
@@ -36,18 +32,6 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$user_id]);
 $my_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get pending claims on my items
-$stmt = $pdo->prepare("
-    SELECT c.*, i.title as item_title, u.full_name as claimant_name 
-    FROM claims c 
-    JOIN items i ON c.item_id = i.item_id 
-    JOIN users u ON c.claimant_user_id = u.user_id 
-    WHERE i.user_id = ? AND c.status = 'pending'
-    ORDER BY c.submitted_at DESC
-");
-$stmt->execute([$user_id]);
-$pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 
@@ -158,31 +142,23 @@ $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <span class="material-symbols-outlined" data-icon="description">description</span>
         My Reports
       </a>
-<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="#claims-section">
-<span class="material-symbols-outlined" data-icon="notification_important">notification_important</span>
-        Claim Requests
+<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="messages.php">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+        Messages
       </a>
 <a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg opacity-50 pointer-events-none" href="#" title="Coming soon">
 <span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
         Saved Items
       </a>
-<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="profile.php">
+<a class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg opacity-50 pointer-events-none" href="#" title="Coming soon">
 <span class="material-symbols-outlined" data-icon="settings">settings</span>
         Settings
       </a>
-<a class="flex items-center gap-3 p-3 text-error hover:bg-red-50 dark:hover:bg-red-900/20 hover:translate-x-1 transition-transform cursor-pointer transition-all rounded-lg" href="logout.php">
-<span class="material-symbols-outlined" data-icon="logout">logout</span>
-        Logout
-      </a>
 </div>
-<div class="mt-auto pt-6 flex flex-col gap-2">
-<a href="post-lost.php" class="w-full bg-[#F4A261] hover:opacity-90 text-white py-3 px-4 rounded-DEFAULT font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2">
-<span class="material-symbols-outlined" data-icon="search">search</span>
-        Lost Item
-      </a>
-<a href="post-found.php" class="w-full bg-[#0F7173] hover:opacity-90 text-white py-3 px-4 rounded-DEFAULT font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2">
-<span class="material-symbols-outlined" data-icon="volunteer_activism">volunteer_activism</span>
-        Found Item
+<div class="mt-auto pt-6">
+<a href="post-lost.php" class="w-full bg-[#0D1B2A] hover:bg-primary-container text-white py-3 px-4 rounded-DEFAULT font-bold text-sm transition-all shadow-[0_8px_32px_rgba(13,27,42,0.06)] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+        New Report
       </a>
 </div>
 </nav>
@@ -199,39 +175,39 @@ $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!-- Stats Row -->
 <section class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-<div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)] border-l-4 border-[#F4A261]">
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
 <div class="flex items-center gap-3 mb-4 text-on-surface-variant">
-<span class="material-symbols-outlined text-[#F4A261]" data-icon="search">search</span>
-<span class="text-xs font-semibold uppercase tracking-wider">My Lost Posts</span>
+<span class="material-symbols-outlined text-[#0D1B2A]" data-icon="post_add">post_add</span>
+<span class="text-xs font-semibold uppercase tracking-wider">Total Posts</span>
 </div>
-<p class="text-3xl font-bold text-[#0D1B2A]"><?= $lost_count ?></p>
-</div>
-<div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)] border-l-4 border-[#0F7173]">
-<div class="flex items-center gap-3 mb-4 text-on-surface-variant">
-<span class="material-symbols-outlined text-[#0F7173]" data-icon="volunteer_activism">volunteer_activism</span>
-<span class="text-xs font-semibold uppercase tracking-wider">My Found Posts</span>
-</div>
-<p class="text-3xl font-bold text-[#0D1B2A]"><?= $found_count ?></p>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $total_posts ?></p>
 </div>
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
 <div class="flex items-center gap-3 mb-4 text-on-surface-variant">
-<span class="material-symbols-outlined text-[#0D1B2A]" data-icon="check_circle">check_circle</span>
-<span class="text-xs font-semibold uppercase tracking-wider">Recovered</span>
+<span class="material-symbols-outlined text-[#0F7173]" data-icon="check_circle">check_circle</span>
+<span class="text-xs font-semibold uppercase tracking-wider">Items Recovered</span>
 </div>
 <p class="text-3xl font-bold text-[#0D1B2A]"><?= $items_recovered ?></p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)]">
+<div class="flex items-center gap-3 mb-4 text-on-surface-variant">
+<span class="material-symbols-outlined text-[#F4A261]" data-icon="pending_actions">pending_actions</span>
+<span class="text-xs font-semibold uppercase tracking-wider">Pending Claims</span>
+</div>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $pending_claims ?></p>
 </div>
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-[0_8px_32px_rgba(13,27,42,0.06)] relative overflow-hidden">
 <div class="absolute top-0 right-0 w-16 h-16 bg-[#0D1B2A]/5 rounded-bl-full"></div>
 <div class="flex items-center gap-3 mb-4 text-on-surface-variant">
-<span class="material-symbols-outlined text-[#0D1B2A]" data-icon="notification_important">notification_important</span>
-<span class="text-xs font-semibold uppercase tracking-wider">Claim Requests</span>
+<span class="material-symbols-outlined text-[#0D1B2A]" data-icon="mark_email_unread">mark_email_unread</span>
+<span class="text-xs font-semibold uppercase tracking-wider">Unread Messages</span>
 </div>
-<p class="text-3xl font-bold text-[#0D1B2A]"><?= $pending_claims_count ?></p>
+<p class="text-3xl font-bold text-[#0D1B2A]"><?= $unread_messages ?></p>
 </div>
 </section>
 <!-- Quick Actions -->
 <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-<a href="post-lost.php" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#F4A261] to-[#d9823f] shadow-[0_8px_32px_rgba(244,162,97,0.2)] block">
+<a href="post-lost.php?type=lost" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#F4A261] to-[#d9823f] shadow-[0_8px_32px_rgba(244,162,97,0.2)] block">
 <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 <div class="relative z-10 text-white">
 <span class="material-symbols-outlined text-4xl mb-4 block" data-icon="search_hands_free">search_hands_free</span>
@@ -239,7 +215,7 @@ $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <p class="text-white/90 text-sm">Alert the community to help you find what you have lost.</p>
 </div>
 </a>
-<a href="post-found.php" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#0F7173] to-[#0a4e50] shadow-[0_8px_32px_rgba(15,113,115,0.2)] block">
+<a href="post-lost.php?type=found" class="group relative overflow-hidden rounded-xl p-8 text-left transition-transform hover:-translate-y-1 bg-gradient-to-br from-[#0F7173] to-[#0a4e50] shadow-[0_8px_32px_rgba(15,113,115,0.2)] block">
 <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 <div class="relative z-10 text-white">
 <span class="material-symbols-outlined text-4xl mb-4 block" data-icon="volunteer_activism">volunteer_activism</span>
@@ -250,80 +226,8 @@ $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </section>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 <!-- Recent Activity Feed -->
-<section class="lg:col-span-2" id="claims-section">
-<h3 class="text-lg font-bold text-[#0D1B2A] mb-8">Pending Claim Requests</h3>
-
-<?php if (empty($pending_requests)): ?>
-    <div class="bg-surface-container-lowest p-8 rounded-xl text-center text-on-surface-variant shadow-sm">
-        <span class="material-symbols-outlined text-4xl opacity-30 mb-2">notifications_off</span>
-        <p>No pending requests at the moment.</p>
-    </div>
-<?php else: ?>
-    <div class="space-y-4">
-    <?php foreach ($pending_requests as $req): ?>
-        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.04)] border-l-4 border-primary flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h4 class="font-bold text-[#0D1B2A]"><?= htmlspecialchars($req['claimant_name']) ?> <span class="font-normal text-on-surface-variant">is claiming</span> <?= htmlspecialchars($req['item_title']) ?></h4>
-                <p class="text-sm text-on-surface-variant mt-1 italic">"<?= htmlspecialchars($req['proof'] ?? $req['answer_1'] ?? 'No details provided.') ?>"</p>
-                <p class="text-[10px] text-on-surface-variant mt-2 uppercase tracking-widest"><?= date('M j, Y h:i A', strtotime($req['submitted_at'])) ?></p>
-            </div>
-            <div class="flex gap-2 w-full md:w-auto">
-                <button onclick="handleClaim(<?= $req['claim_id'] ?>, 'reject')" class="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-error bg-error/10 rounded hover:bg-error/20 transition-colors">Reject</button>
-                <button onclick="handleClaim(<?= $req['claim_id'] ?>, 'approve')" class="flex-1 md:flex-none px-4 py-2 text-xs font-bold text-white bg-secondary rounded hover:opacity-90 transition-all shadow-sm">Accept</button>
-            </div>
-        </div>
-    <?php endforeach; ?>
-    </div>
-<?php endif; ?>
-
-<script>
-async function handleClaim(claimId, action) {
-    if(!confirm(`Are you sure you want to ${action} this claim?`)) return;
-    
-    const formData = new FormData();
-    formData.append('claim_id', claimId);
-    formData.append('action', action);
-    
-    try {
-        const response = await fetch('api/handle_claim.php', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        if(data.success) {
-            window.location.reload();
-        } else {
-            alert(data.message);
-        }
-    } catch (err) {
-        alert("Error processing request.");
-    }
-}
-
-async function deleteItem(itemId) {
-    if(!confirm("Are you sure you want to delete this report? This action cannot be undone.")) return;
-    
-    try {
-        const formData = new FormData();
-        formData.append('item_id', itemId);
-        
-        const response = await fetch('api/delete_item.php', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        if(data.success) {
-            window.location.reload();
-        } else {
-            alert(data.message);
-        }
-    } catch (err) {
-        alert("Error deleting item.");
-    }
-}
-</script>
-
-<h3 class="text-lg font-bold text-[#0D1B2A] mt-16 mb-8">Recent Activity</h3>
+<section class="lg:col-span-2">
+<h3 class="text-lg font-bold text-[#0D1B2A] mb-8">Recent Activity</h3>
 <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-outline-variant/30 before:to-transparent">
 <!-- Timeline Item 1 -->
 <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
@@ -337,6 +241,20 @@ async function deleteItem(itemId) {
 </div>
 <h4 class="text-base font-bold text-[#0D1B2A] mb-1">Vintage Leather Satchel</h4>
 <p class="text-sm text-on-surface-variant">Owner confirmed receipt. Report closed successfully.</p>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface bg-[#F4A261] text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
+<span class="material-symbols-outlined text-sm" data-icon="priority_high">priority_high</span>
+</div>
+<div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-lowest p-6 rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.04)] border-l-4 border-[#F4A261]">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-semibold text-[#F4A261] uppercase tracking-wider">New Lead</span>
+<span class="text-xs text-on-surface-variant">Yesterday</span>
+</div>
+<h4 class="text-base font-bold text-[#0D1B2A] mb-1">Golden Retriever 'Max'</h4>
+<p class="text-sm text-on-surface-variant">Someone spotted a dog matching Max's description near City Park.</p>
 </div>
 </div>
 </div>
@@ -364,15 +282,10 @@ async function deleteItem(itemId) {
             <span class="material-symbols-outlined text-outline">image</span>
         </div>
     <?php endif; ?>
-    <div class="p-4 flex flex-col justify-center flex-1">
-        <div class="flex justify-between items-start">
-            <span class="text-[10px] font-bold uppercase <?= $item['type'] === 'lost' ? 'text-[#F4A261]' : 'text-[#0F7173]' ?> tracking-wider mb-1"><?= htmlspecialchars($item['type']) ?></span>
-            <button onclick="deleteItem(<?= $item['item_id'] ?>)" class="text-error hover:bg-error/10 p-1 rounded-full transition-colors" title="Delete Report">
-                <span class="material-symbols-outlined text-[16px]">delete</span>
-            </button>
-        </div>
-        <h4 class="text-sm font-bold text-[#0D1B2A] leading-tight line-clamp-1"><a href="item-detail.php?id=<?= $item['item_id'] ?>" class="hover:underline"><?= htmlspecialchars($item['title']) ?></a></h4>
-        <p class="text-xs text-on-surface-variant mt-1 line-clamp-1"><?= htmlspecialchars($item['location_text']) ?></p>
+    <div class="p-4 flex flex-col justify-center">
+    <span class="text-[10px] font-bold uppercase <?= $item['type'] === 'lost' ? 'text-[#F4A261]' : 'text-[#0F7173]' ?> tracking-wider mb-1"><?= htmlspecialchars($item['type']) ?></span>
+    <h4 class="text-sm font-bold text-[#0D1B2A] leading-tight line-clamp-1"><a href="item-detail.php?id=<?= $item['item_id'] ?>" class="hover:underline"><?= htmlspecialchars($item['title']) ?></a></h4>
+    <p class="text-xs text-on-surface-variant mt-1 line-clamp-1"><?= htmlspecialchars($item['location_text']) ?></p>
     </div>
     </div>
     </div>
@@ -383,4 +296,3 @@ async function deleteItem(itemId) {
 </div>
 </main>
 </body></html>
-// Project finalized and optimized by Armancle

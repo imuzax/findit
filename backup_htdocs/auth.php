@@ -100,7 +100,7 @@ if (isset($_SESSION['user_id'])) {
 <div class="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-secondary opacity-5 blur-3xl"></div>
 <div class="relative z-10">
 <h1 class="font-headline font-extrabold text-on-primary text-4xl tracking-tight mb-2">FindIt</h1>
-<p class="font-body text-inverse-primary text-lg font-medium">Digital Lost & Found</p>
+<p class="font-body text-inverse-primary text-lg font-medium">Digital Concierge</p>
 </div>
 <div class="relative z-10 max-w-md">
 <h2 class="font-headline font-extrabold text-on-primary text-[3.5rem] leading-[1.1] tracking-[-0.02em] mb-6">
@@ -115,6 +115,8 @@ if (isset($_SESSION['user_id'])) {
 <div class="w-2 h-2 rounded-full bg-on-primary opacity-30"></div>
 <div class="w-2 h-2 rounded-full bg-on-primary opacity-30"></div>
 </div>
+<!-- Abstract Background Image -->
+<img alt="" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30 pointer-events-none" data-alt="abstract flowing glass-like shapes in dark navy tones with subtle teal edge lighting creating a premium digital aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABImZCu2vHnqZohARIPyuVK1nNn91TJmNwd4HSLdkJn63GuemeYhcew_55lfKJ9R3aeq0vm1zltdQZposV3n3lXNch2w05OFYEN9yASOUu19--7EhjvBL8VlpVfZfj1VZXDupaWKG0Teu6PfyRZkAxPHtTOrLrmcONiGCQ1lHb0-nDDUk1hVKEQcBVSJ_3TUALeE6zONUOE0NIlfXExjtgzMK563Cy5VQz9etnoEchwfyE3us69lGg85tlkpFp7KnisgLr0uUXvqBq"/>
 </div>
 <!-- Right White Form Panel -->
 <div class="w-full lg:w-1/2 bg-surface-container-lowest flex flex-col justify-center items-center p-8 sm:p-16 relative overflow-y-auto">
@@ -153,7 +155,6 @@ if (isset($_SESSION['user_id'])) {
 <div class="flex flex-col gap-2">
 <div class="flex justify-between items-center">
 <label class="font-label font-semibold text-on-background text-sm" for="login-password">Password</label>
-<a class="text-xs font-semibold text-[#0F7173] hover:underline" href="forgot-password.php">Forgot password?</a>
 </div>
 <div class="relative">
 <input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="login-password" name="password" placeholder="••••••••" type="password" required/>
@@ -168,25 +169,15 @@ if (isset($_SESSION['user_id'])) {
 <form id="register-form" class="hidden flex flex-col gap-6" onsubmit="handleRegister(event)">
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-name">Full Name</label>
-<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-name" name="full_name" placeholder="e.g., Arman Khan" type="text" required/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-name" name="full_name" placeholder="John Doe" type="text" required/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-email">Email Address</label>
-<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-email" name="email" placeholder="yourname@example.com" type="email" required/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-email" name="email" placeholder="john@example.com" type="email" required/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-phone">Phone Number</label>
-<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-phone" name="phone" placeholder="e.g., 9876543210" type="text"/>
-</div>
-<div class="grid grid-cols-2 gap-4">
-    <div class="flex flex-col gap-2">
-    <label class="font-label font-semibold text-on-background text-sm" for="reg-dept">Department</label>
-    <input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-dept" name="department" placeholder="e.g., BCA, B.Sc" type="text"/>
-    </div>
-    <div class="flex flex-col gap-2">
-    <label class="font-label font-semibold text-on-background text-sm" for="reg-roll">Roll Number</label>
-    <input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-roll" name="roll_number" placeholder="e.g., 1234" type="text"/>
-    </div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-DEFAULT px-4 py-3 font-body text-base text-on-background focus:outline-none focus:ring-2 focus:ring-[#0F7173] focus:border-transparent transition-shadow placeholder:text-on-surface-variant/50 shadow-sm" id="reg-phone" name="phone" placeholder="0987654321" type="text"/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label font-semibold text-on-background text-sm" for="reg-password">Password (Min 6 chars)</label>
@@ -318,4 +309,3 @@ async function handleRegister(e) {
 </div>
 </div>
 </body></html>
-// Project finalized and optimized by Armancle

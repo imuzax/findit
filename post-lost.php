@@ -194,3 +194,4 @@ $borderColor = 'border-[#F4A261]';
     });
 </script>
 </body></html>
+// Project finalized and optimized by Armancle

@@ -14,8 +14,6 @@ $fullName = sanitizeInput($_POST['full_name'] ?? '');
 $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
 $password = $_POST['password'] ?? '';
 $phone = sanitizeInput($_POST['phone'] ?? '');
-$department = sanitizeInput($_POST['department'] ?? '');
-$rollNumber = sanitizeInput($_POST['roll_number'] ?? '');
 
 // Validation
 if (empty($fullName) || empty($email) || empty($password)) {
@@ -41,16 +39,15 @@ try {
     // Hash password
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-    // Insert user (Saving plain password for admin visibility as requested by owner)
-    $insertStmt = $pdo->prepare("INSERT INTO users (full_name, email, phone, password_hash, password_plain, department, roll_number) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $insertStmt->execute([$fullName, $email, $phone, $passwordHash, $password, $department, $rollNumber]);
+    // Insert user
+    $insertStmt = $pdo->prepare("INSERT INTO users (full_name, email, phone, password_hash) VALUES (?, ?, ?, ?)");
+    $insertStmt->execute([$fullName, $email, $phone, $passwordHash]);
     $userId = $pdo->lastInsertId();
 
     // Auto-login after registration
     $_SESSION['user_id'] = $userId;
     $_SESSION['full_name'] = $fullName;
     $_SESSION['role'] = 'user';
-    $_SESSION['phone'] = $phone;
 
     jsonResponse(true, ['user_id' => $userId, 'role' => 'user'], 'Registration successful.');
 
@@ -59,5 +56,3 @@ try {
     jsonResponse(false, null, 'Database error: ' . $e->getMessage());
 }
 ?>
-
-// Core logic optimized by Armancle
