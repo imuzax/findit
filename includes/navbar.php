@@ -21,7 +21,7 @@ $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         <?php endif; ?>
         
         <?php if ($isAdmin): ?>
-        <a class="<?= ($currentPage == 'admin.php') ? 'text-[#0F7173] font-bold border-b-2 border-[#0F7173] pb-1' : 'text-slate-600 dark:text-slate-400 hover:text-[#0D1B2A] dark:hover:text-white transition-colors' ?> hover:bg-slate-100/50 hidden md:inline-block dark:hover:bg-slate-800/50 transition-all duration-200 active:scale-95 duration-150 font-['Inter'] tracking-tight" href="admin.php">Admin Panel</a>
+        <a class="<?= (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'text-[#0F7173] font-bold border-b-2 border-[#0F7173] pb-1' : 'text-slate-600 dark:text-slate-400 hover:text-[#0D1B2A] dark:hover:text-white transition-colors' ?> hover:bg-slate-100/50 hidden md:inline-block dark:hover:bg-slate-800/50 transition-all duration-200 active:scale-95 duration-150 font-['Inter'] tracking-tight" href="admin/dashboard.php">Admin Panel</a>
         <?php endif; ?>
     </nav>
     <!-- Actions -->
@@ -32,8 +32,12 @@ $isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         <?php else: ?>
             <a class="text-[#0D1B2A] dark:text-slate-100 font-['Inter'] font-bold tracking-tight hover:bg-slate-100/50 dark:hover:bg-slate-800/50 px-4 py-2 rounded-DEFAULT transition-all duration-200 active:scale-95 duration-150" href="auth.php">Login / Sign Up</a>
         <?php endif; ?>
-        <a class="bg-[#0D1B2A] text-white hover:bg-[#1a2d42] transition-all duration-200 active:scale-95 duration-150 px-6 py-2.5 rounded-DEFAULT font-['Inter'] font-bold tracking-tight shadow-md flex items-center" href="post-lost.php">
-            <span class="material-symbols-outlined mr-2" style="font-size: 20px;">add_circle</span> Report Item
+        
+        <a class="bg-[#F4A261] text-white hover:opacity-90 transition-all px-4 py-2.5 rounded-DEFAULT font-['Inter'] font-bold tracking-tight shadow-md flex items-center gap-1" href="post-lost.php">
+            <span class="material-symbols-outlined" style="font-size: 20px;">search</span> Lost
+        </a>
+        <a class="bg-[#0F7173] text-white hover:opacity-90 transition-all px-4 py-2.5 rounded-DEFAULT font-['Inter'] font-bold tracking-tight shadow-md flex items-center gap-1" href="post-found.php">
+            <span class="material-symbols-outlined" style="font-size: 20px;">volunteer_activism</span> Found
         </a>
     </div>
 </div>
