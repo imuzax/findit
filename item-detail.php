@@ -8,7 +8,13 @@ if (!$item_id) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT * FROM items WHERE item_id = ?");
+// Fetch item details along with owner contact info from users table as fallback
+$stmt = $pdo->prepare("
+    SELECT i.*, u.phone as owner_backup_phone, u.full_name as owner_backup_name 
+    FROM items i 
+    JOIN users u ON i.user_id = u.user_id 
+    WHERE i.item_id = ?
+");
 $stmt->execute([$item_id]);
 $item = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -24,7 +30,6 @@ $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
 if (empty($images)) {
     $images[] = '/assets/img/placeholder.jpg';
 } else {
-    // Remove leading '../' if it exists in the paths
     foreach ($images as &$path) {
         $path = preg_replace('/^\.\.\//', '', $path);
     }
@@ -38,6 +43,10 @@ $isLost = $item['type'] === 'lost';
 $themeColorClass = $isLost ? 'text-[#F4A261]' : 'text-secondary';
 $themeBgClass = $isLost ? 'bg-[#F4A261]/10' : 'bg-secondary/10';
 $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
+
+// Use specific contact info if provided in the post, else use user profile info
+$displayPhone = !empty($item['contact_phone']) ? $item['contact_phone'] : $item['owner_backup_phone'];
+$displayName = !empty($item['contact_name']) ? $item['contact_name'] : $item['owner_backup_name'];
 ?>
 <!DOCTYPE html>
 
@@ -47,7 +56,6 @@ $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
 <title>FindIt - Item Detail</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
       tailwind.config = {
@@ -120,6 +128,7 @@ $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
     </script>
 <style>
         body { font-family: 'Inter', sans-serif; }
+        .modal-overlay { background: rgba(13, 27, 42, 0.4); backdrop-filter: blur(4px); }
     </style>
 <link rel="stylesheet" href="assets/css/smooth.css">
 <script src="assets/js/smooth.js" defer></script>
@@ -202,30 +211,23 @@ $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
     <?php if ($isResolved): ?>
         <button disabled class="w-full bg-surface-variant text-on-surface-variant font-bold py-4 px-6 rounded-DEFAULT shadow-none flex justify-center items-center gap-2 cursor-not-allowed">
             <span class="material-symbols-outlined">check_circle</span>
-            Already <?= $isLost ? 'Recovered' : 'Returned' ?>
+            Already Resolved
         </button>
     <?php elseif ($isOwner): ?>
         <button onclick="resolveItem(<?= $item_id ?>)" id="resolveBtn" class="w-full bg-secondary hover:bg-[#005a5c] text-on-secondary font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-colors">
             <span class="material-symbols-outlined">verified</span>
-            Mark as <?= $isLost ? 'Found / Recovered' : 'Returned' ?>
+            Mark as Resolved
         </button>
     <?php elseif (!$isLoggedIn): ?>
         <a href="auth.php?redirect=item-detail.php?id=<?= $item_id ?>" class="w-full bg-surface-container-high hover:bg-surface-dim text-on-surface font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 text-center transition-colors">
             <span class="material-symbols-outlined">login</span>
-            Login to Claim / Contact Owner
+            Login to Claim & Contact
         </a>
     <?php else: ?>
-        <?php if ($isLost): ?>
-            <button onclick="claimItem(<?= $item_id ?>)" id="claimBtn" class="w-full bg-secondary hover:bg-[#005a5c] text-on-secondary font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-colors">
-                <span class="material-symbols-outlined">contact_mail</span>
-                I Found This (Contact Owner)
-            </button>
-        <?php else: ?>
-            <button onclick="claimItem(<?= $item_id ?>)" id="claimBtn" class="w-full bg-[#F4A261] hover:bg-[#e09152] text-primary font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-colors">
-                <span class="material-symbols-outlined">waving_hand</span>
-                This Is Mine — Claim Item
-            </button>
-        <?php endif; ?>
+        <button onclick="openClaimModal()" id="claimBtn" class="w-full <?= $isLost ? 'bg-secondary' : 'bg-[#F4A261]' ?> text-white font-bold py-4 px-6 rounded-DEFAULT shadow-md flex justify-center items-center gap-2 transition-transform hover:scale-[1.02]">
+            <span class="material-symbols-outlined"><?= $isLost ? 'contact_phone' : 'front_hand' ?></span>
+            <?= $isLost ? 'I Found This Item' : 'This Is Mine — Claim Item' ?>
+        </button>
     <?php endif; ?>
 </div>
 
@@ -234,84 +236,120 @@ $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
 </div>
 </div>
 </main>
-<!-- Footer -->
+
+<!-- Claim Modal -->
+<div id="claimModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6">
+    <div class="absolute inset-0 modal-overlay" onclick="closeClaimModal()"></div>
+    <div class="bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden transform transition-all scale-95 opacity-0 duration-300" id="modalContent">
+        <!-- Modal Header -->
+        <div class="bg-primary text-white p-6 flex justify-between items-center">
+            <h3 class="text-xl font-bold font-headline">Contact & Claim Request</h3>
+            <button onclick="closeClaimModal()" class="material-symbols-outlined hover:rotate-90 transition-transform">close</button>
+        </div>
+        <!-- Modal Body -->
+        <div class="p-8 space-y-6">
+            <div class="bg-secondary/5 p-4 rounded-lg flex items-center gap-4 border border-secondary/10">
+                <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center text-secondary">
+                    <span class="material-symbols-outlined">call</span>
+                </div>
+                <div>
+                    <p class="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Poster's Contact Number</p>
+                    <p class="text-xl font-bold text-primary"><?= htmlspecialchars($displayPhone) ?></p>
+                </div>
+            </div>
+
+            <form id="claimForm" class="space-y-4">
+                <input type="hidden" name="item_id" value="<?= $item_id ?>">
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-primary">Provide Verification Details</label>
+                    <p class="text-xs text-on-surface-variant mb-2">
+                        <?= !empty($item['owner_question']) ? "<strong>Question:</strong> " . htmlspecialchars($item['owner_question']) : "Describe unique identifying marks or proof that this item belongs to you." ?>
+                    </p>
+                    <textarea name="proof" class="w-full p-4 rounded-lg bg-surface border-none focus:ring-2 focus:ring-secondary text-sm resize-none" rows="4" placeholder="Your answer or proof here..." required></textarea>
+                </div>
+                <button type="submit" id="submitClaimBtn" class="w-full bg-primary text-white font-bold py-4 rounded-lg hover:bg-primary/90 transition-colors flex justify-center items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">send</span>
+                    Send Claim Request
+                </button>
+            </form>
+            <div id="modalStatus" class="hidden p-3 rounded-md text-sm text-center"></div>
+        </div>
+    </div>
+</div>
+
 <?php include 'includes/footer.php'; ?>
 
 <script>
-    async function claimItem(itemId) {
-        const btn = document.getElementById('claimBtn');
-        const statusBox = document.getElementById('statusMessage');
-        
-        btn.disabled = true;
-        btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm" data-icon="progress_activity">progress_activity</span> Processing...`;
-        
-        try {
-            const formData = new FormData();
-            formData.append('item_id', itemId);
+    function openClaimModal() {
+        const modal = document.getElementById('claimModal');
+        const content = document.getElementById('modalContent');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
 
+    function closeClaimModal() {
+        const modal = document.getElementById('claimModal');
+        const content = document.getElementById('modalContent');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    document.getElementById('claimForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitClaimBtn');
+        const status = document.getElementById('modalStatus');
+        const formData = new FormData(this);
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span> Sending...`;
+
+        try {
             const response = await fetch('api/claim_item.php', {
                 method: 'POST',
                 body: formData
             });
             const data = await response.json();
             
-            statusBox.classList.remove('hidden', 'bg-error-container', 'text-on-error-container', 'bg-[#c6f6d5]', 'text-[#22543d]');
-            
+            status.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
             if(data.success) {
-                statusBox.classList.add('bg-[#c6f6d5]', 'text-[#22543d]');
-                statusBox.innerText = data.message + " Redirecting to messages...";
-                btn.style.display = 'none'; // hide button gracefully
+                status.classList.add('bg-green-100', 'text-green-700');
+                status.innerText = "Claim request sent successfully! The owner will review it.";
                 setTimeout(() => {
-                    window.location.href = `messages.php?item_id=${itemId}`;
-                }, 1500);
+                    closeClaimModal();
+                    window.location.reload();
+                }, 2000);
             } else {
-                statusBox.classList.add('bg-error-container', 'text-on-error-container');
-                statusBox.innerText = data.message;
+                status.classList.add('bg-red-100', 'text-red-700');
+                status.innerText = data.message;
                 btn.disabled = false;
-                btn.innerHTML = `Try Again`;
+                btn.innerText = "Try Again";
             }
-        } catch (error) {
-            statusBox.classList.remove('hidden');
-            statusBox.classList.add('bg-error-container', 'text-on-error-container');
-            statusBox.innerText = "Network Error. Please try again.";
+        } catch (err) {
+            status.classList.remove('hidden');
+            status.classList.add('bg-red-100', 'text-red-700');
+            status.innerText = "Error sending request.";
             btn.disabled = false;
         }
-    }
+    });
 
     async function resolveItem(itemId) {
-        if(!confirm("Are you sure you want to mark this item as resolved? This cannot be undone.")) return;
-
+        if(!confirm("Are you sure? This will close the report.")) return;
         const btn = document.getElementById('resolveBtn');
-        const statusBox = document.getElementById('statusMessage');
-        
         btn.disabled = true;
-        btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm" data-icon="progress_activity">progress_activity</span> Processing...`;
-        
         try {
             const formData = new FormData();
             formData.append('item_id', itemId);
-
-            const response = await fetch('api/resolve_item.php', {
-                method: 'POST',
-                body: formData
-            });
+            const response = await fetch('api/resolve_item.php', { method: 'POST', body: formData });
             const data = await response.json();
-            
-            if(data.success) {
-                window.location.reload();
-            } else {
-                statusBox.classList.remove('hidden');
-                statusBox.classList.add('bg-error-container', 'text-on-error-container');
-                statusBox.innerText = data.message;
-                btn.disabled = false;
-                btn.innerHTML = `Try Again`;
-            }
-        } catch (error) {
-            statusBox.classList.remove('hidden');
-            statusBox.classList.add('bg-error-container', 'text-on-error-container');
-            statusBox.innerText = "Network Error.";
-            btn.disabled = false;
-        }
+            if(data.success) window.location.reload();
+            else alert(data.message);
+        } catch (error) { alert("Error."); btn.disabled = false; }
     }
 </script>
 </body></html>
