@@ -6,7 +6,7 @@ $stmt = $pdo->prepare("
     SELECT i.*, 
            (SELECT image_path FROM item_images WHERE item_id = i.item_id ORDER BY is_primary DESC LIMIT 1) as primary_image
     FROM items i
-    WHERE i.status IN ('active', 'matched', 'verified')
+    WHERE i.status IN ('active', 'matched', 'verified', 'returned')
     ORDER BY i.created_at DESC
     LIMIT 6
 ");
@@ -197,6 +197,11 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <span class="material-symbols-outlined text-[14px] mr-1"><?= $iconName ?></span>
                 <?= strtoupper(htmlspecialchars($item['type'])) ?>
             </span>
+            <?php if($item['status'] === 'returned'): ?>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 border border-green-200 uppercase tracking-tighter">
+                    <span class="material-symbols-outlined text-[12px] mr-1">task_alt</span> Resolved
+                </span>
+            <?php endif; ?>
             <span class="text-xs font-body text-outline"><?= date('M j, Y', strtotime($item['created_at'])) ?></span>
         </div>
         <h3 class="text-[1.125rem] font-semibold font-headline text-on-surface mb-2 truncate" title="<?= htmlspecialchars($item['title']) ?>"><?= htmlspecialchars($item['title']) ?></h3>

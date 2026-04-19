@@ -9,7 +9,7 @@ $category = isset($_GET['category']) ? $_GET['category'] : '';
 $queryParams = [];
 $sql = "SELECT i.*, 
             (SELECT image_path FROM item_images WHERE item_id = i.item_id ORDER BY is_primary DESC LIMIT 1) as primary_image
-        FROM items i WHERE i.status IN ('active', 'matched', 'verified') ";
+        FROM items i WHERE i.status IN ('active', 'matched', 'verified', 'returned') ";
 
 if ($type === 'lost' || $type === 'found') {
     $sql .= " AND i.type = ?";
@@ -221,7 +221,14 @@ while($row = $stmtCat->fetch()) {
                     <?php else: ?>
                         <span class="material-symbols-outlined text-[48px] text-outline opacity-50">image</span>
                     <?php endif; ?>
-                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold <?= $themeColorClass ?> shadow-sm uppercase tracking-wider"><?= htmlspecialchars($item['type']) ?></div>
+                    <div class="absolute top-4 left-4 flex gap-2">
+                        <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold <?= $themeColorClass ?> shadow-sm uppercase tracking-wider"><?= htmlspecialchars($item['type']) ?></div>
+                        <?php if($item['status'] === 'returned'): ?>
+                            <div class="bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">task_alt</span> Resolved
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="p-6 flex-grow flex flex-col">
                     <h2 class="text-lg font-semibold text-primary mb-2 line-clamp-1" title="<?= htmlspecialchars($item['title']) ?>"><?= htmlspecialchars($item['title']) ?></h2>

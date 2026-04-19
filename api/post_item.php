@@ -20,6 +20,11 @@ $color = sanitizeInput($_POST['color'] ?? '');
 $brand = sanitizeInput($_POST['brand'] ?? '');
 $dateOccurred = sanitizeInput($_POST['date_occurred'] ?? date('Y-m-d'));
 $locationText = sanitizeInput($_POST['location_text'] ?? '');
+$contactName = sanitizeInput($_POST['contact_name'] ?? '');
+$contactPhone = sanitizeInput($_POST['contact_phone'] ?? '');
+$rewardOffered = sanitizeInput($_POST['reward_offered'] ?? '');
+$itemCurrentlyAt = sanitizeInput($_POST['item_currently_at'] ?? '');
+$ownerQuestion = sanitizeInput($_POST['owner_question'] ?? '');
 
 if (empty($title) || empty($description) || empty($category) || empty($locationText)) {
     jsonResponse(false, null, 'Please fill all required fields.');
@@ -27,8 +32,8 @@ if (empty($title) || empty($description) || empty($category) || empty($locationT
 
 try {
     // 2. Insert into items table
-    $stmt = $pdo->prepare("INSERT INTO items (user_id, type, title, description, category, color, brand, date_occurred, location_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$userId, $type, $title, $description, $category, $color, $brand, $dateOccurred, $locationText]);
+    $stmt = $pdo->prepare("INSERT INTO items (user_id, type, title, description, category, color, brand, date_occurred, location_text, contact_name, contact_phone, reward_offered, item_currently_at, owner_question) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$userId, $type, $title, $description, $category, $color, $brand, $dateOccurred, $locationText, $contactName, $contactPhone, $rewardOffered, $itemCurrentlyAt, $ownerQuestion]);
     
     $itemId = $pdo->lastInsertId();
 
@@ -52,7 +57,7 @@ try {
             
             if ($uploadResult['success']) {
                 $status = $i === 0 ? 1 : 0; // First uploaded image is primary
-                $imgPath = '/uploads/items/' . $uploadResult['filename'];
+                $imgPath = 'uploads/items/' . $uploadResult['filename'];
                 
                 $imgStmt = $pdo->prepare("INSERT INTO item_images (item_id, image_path, is_primary) VALUES (?, ?, ?)");
                 $imgStmt->execute([$itemId, $imgPath, $status]);
