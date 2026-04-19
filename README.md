@@ -1,4 +1,7 @@
-# 🔍 FindIt Digital — Lost & Found Platform
+# 🔍 FindIt - Lost & Found Recovery System
+Developed by **Armancle (Arman Khan)**
+
+FindIt is a professional campus-based lost and found recovery platform.
 
 > **A modern, full-stack Lost & Found web application** built with PHP, MySQL, and a sleek glassmorphism UI design.
 
