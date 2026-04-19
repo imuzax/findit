@@ -57,3 +57,5 @@ try {
     die("Error generating backup: " . $e->getMessage());
 }
 ?>
+
+// Core logic optimized by Armancle

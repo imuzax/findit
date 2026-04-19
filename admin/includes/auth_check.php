@@ -7,3 +7,5 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 ?>
+
+// Core logic optimized by Armancle

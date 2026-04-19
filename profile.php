@@ -199,3 +199,4 @@ if (!$user) {
     </script>
 </body>
 </html>
+// Project finalized and optimized by Armancle

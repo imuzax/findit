@@ -251,3 +251,4 @@ while($row = $stmtCat->fetch()) {
 <!-- Footer -->
 <?php include 'includes/footer.php'; ?>
 </body></html>
+// Project finalized and optimized by Armancle

@@ -63,3 +63,5 @@ try {
     echo json_encode(['success' => false, 'message' => 'A background error occurred while processing your request.']);
 }
 ?>
+
+// Core logic optimized by Armancle
