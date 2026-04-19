@@ -174,6 +174,27 @@ $themeLineClass = $isLost ? 'border-[#F4A261]' : 'border-secondary';
     <div class="text-sm"><span class="font-bold">Date <?= $isLost ? 'Lost' : 'Found' ?>:</span> <?= date('M j, Y', strtotime($item['date_occurred'])) ?></div>
     <?php endif; ?>
 </div>
+
+<!-- Reporter Contact Details -->
+<div class="mt-6 pt-6 border-t border-surface-container-high">
+    <h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-3">Posted By</h3>
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+            <?= strtoupper(substr($item['contact_name'] ?? 'U', 0, 1)) ?>
+        </div>
+        <div>
+            <div class="text-sm font-bold text-primary"><?= htmlspecialchars($item['contact_name'] ?? 'Authorized User') ?></div>
+            <?php if ($isLoggedIn): ?>
+                <a href="tel:<?= htmlspecialchars($item['contact_phone'] ?? '') ?>" class="text-xs text-secondary font-semibold hover:underline flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">call</span>
+                    <?= htmlspecialchars($item['contact_phone'] ?? 'Contact hidden') ?>
+                </a>
+            <?php else: ?>
+                <div class="text-[10px] text-on-surface-variant italic">Login to view contact number</div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
 </div>
 <!-- Lifecycle -->
 <?php if ($isResolved): ?>

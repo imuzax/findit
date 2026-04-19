@@ -1,0 +1,13 @@
+# FindIt Azam Campus - Git Ignore
+# Ignore environment specific files
+includes/config.php
+# .idea/
+# .vscode/
+
+# Ignore uploaded images to keep the repository small
+uploads/items/*
+!uploads/items/.gitkeep
+
+# Ignore OS files
+Thumbs.db
+.DS_Store

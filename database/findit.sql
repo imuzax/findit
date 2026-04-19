@@ -29,6 +29,8 @@ CREATE TABLE `users` (
   `phone` varchar(20) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `campus_location` varchar(100) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `roll_number` varchar(50) DEFAULT NULL,
   `profile_photo` varchar(255) DEFAULT NULL,
   `role` enum('user','admin') DEFAULT 'user',
   `is_verified` tinyint(1) DEFAULT 0,
@@ -59,6 +61,9 @@ CREATE TABLE `items` (
   `location_lng` decimal(11,8) DEFAULT NULL,
   `reward_offered` varchar(100) DEFAULT NULL,
   `item_currently_at` varchar(150) DEFAULT NULL,
+  `contact_name` varchar(100) DEFAULT NULL,
+  `contact_phone` varchar(20) DEFAULT NULL,
+  `owner_question` text DEFAULT NULL,
   `status` enum('active','matched','verified','returned','rejected') DEFAULT 'active',
   `admin_approved` tinyint(1) DEFAULT 0,
   `created_at` timestamp DEFAULT current_timestamp(),
@@ -178,12 +183,12 @@ CREATE TABLE `matches` (
 
 INSERT INTO `users` (`full_name`, `email`, `phone`, `password_hash`, `campus_location`, `role`, `is_verified`) VALUES
 ('System Admin', 'admin@findit.local', '1234567890', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Main Campus', 'admin', 1),
-('John Doe', 'john@example.com', '0987654321', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'North Wing', 'user', 1),
-('Jane Smith', 'jane@example.com', '5551234567', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'South Block', 'user', 1);
+('Arman Khan', 'arman.student@azamcampus.com', '0987654321', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Abeda Inamdar College', 'user', 1),
+('Fatima Shaikh', 'fatima.student@azamcampus.com', '5551234567', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'AIMS Department', 'user', 1);
 
 INSERT INTO `items` (`user_id`, `type`, `title`, `description`, `category`, `color`, `brand`, `date_occurred`, `location_text`, `status`, `admin_approved`) VALUES
-(2, 'lost', 'Blue Backpack', 'Lost my blue Puma backpack. Contains some notebooks and a water bottle.', 'Bags', 'Blue', 'Puma', '2026-04-10', 'Library Main Reading Room', 'active', 1),
-(3, 'found', 'Apple AirPods', 'Found a pair of AirPods in a white charging case.', 'Electronics', 'White', 'Apple', '2026-04-12', 'Cafeteria A', 'active', 1);
+(2, 'lost', 'Blue Puma Backpack', 'Lost my blue Puma backpack. Contains some notebooks and a water bottle.', 'Bags', 'Blue', 'Puma', '2026-04-10', 'Abeda Inamdar Library Reading Room', 'active', 1),
+(3, 'found', 'Scientific Calculator', 'Found a Casio scientific calculator near the main canteen.', 'Electronics', 'Black', 'Casio', '2026-04-12', 'Main Campus Canteen', 'active', 1);
 
 INSERT INTO `item_images` (`item_id`, `image_path`, `is_primary`) VALUES
 (1, '/assets/img/placeholder.jpg', 1),

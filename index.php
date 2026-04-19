@@ -18,7 +18,7 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>FindIt - Digital Concierge</title>
+<title>FindIt - Azam Campus Pune</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -108,29 +108,29 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="absolute bottom-0 right-10 w-80 h-80 bg-[#F4A261]/10 rounded-full blur-3xl z-0 pointer-events-none"></div>
 <div class="relative z-10 max-w-5xl mx-auto flex flex-col items-center text-center">
 <h1 class="text-[3.5rem] font-extrabold font-headline leading-[1.1] tracking-[-0.02em] mb-6 text-on-primary">
-                    Lost Something? Found Something?<br/>
-<span class="text-secondary-fixed">We Connect People.</span>
+                    Lost Something on Campus?<br/>
+<span class="text-secondary-fixed">FindIt Azam Campus Pune.</span>
 </h1>
 <p class="text-[1.125rem] font-body text-primary-fixed-dim max-w-2xl mb-12 leading-[1.6]">
-                    Your community's digital concierge. A trusted platform to report lost belongings or reunite found items with their rightful owners safely and securely.
+                    The official digital lost and found platform for M.C.E. Society's Azam Campus. Helping students and staff reunite with their lost belongings quickly and securely.
                 </p>
 <div class="flex flex-col sm:flex-row gap-4 mb-20 w-full sm:w-auto">
-<a href="post-lost.php?type=lost" class="bg-[#F4A261] hover:bg-[#e09252] text-primary-container font-label font-bold text-[0.875rem] py-4 px-8 rounded-DEFAULT transition-all shadow-[0_8px_24px_rgba(244,162,97,0.3)] min-w-[200px]" style="display:inline-block;text-align:center;">I Lost Something</a>
-<a href="post-lost.php?type=found" class="bg-secondary hover:bg-[#005a5c] text-on-secondary font-label font-bold text-[0.875rem] py-4 px-8 rounded-DEFAULT transition-all shadow-[0_8px_24px_rgba(0,105,107,0.3)] min-w-[200px]" style="display:inline-block;text-align:center;">I Found Something</a>
+<a href="post-lost.php" class="bg-[#F4A261] hover:bg-[#e09252] text-primary-container font-label font-bold text-[0.875rem] py-4 px-8 rounded-DEFAULT transition-all shadow-[0_8px_24px_rgba(244,162,97,0.3)] min-w-[200px]" style="display:inline-block;text-align:center;">I Lost Something</a>
+<a href="post-found.php" class="bg-secondary hover:bg-[#005a5c] text-on-secondary font-label font-bold text-[0.875rem] py-4 px-8 rounded-DEFAULT transition-all shadow-[0_8px_24px_rgba(0,105,107,0.3)] min-w-[200px]" style="display:inline-block;text-align:center;">I Found Something</a>
 </div>
 <!-- Stats Bar -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-16 pt-8 border-t border-primary-fixed-dim/20 w-full max-w-3xl">
 <div class="flex flex-col items-center">
-<span class="text-3xl font-bold font-headline text-on-primary mb-1">12,400+</span>
-<span class="text-sm font-label text-primary-fixed-dim uppercase tracking-wider">Items Found</span>
+<span class="text-3xl font-bold font-headline text-on-primary mb-1">500+</span>
+<span class="text-sm font-label text-primary-fixed-dim uppercase tracking-wider">Items Recovered</span>
 </div>
 <div class="flex flex-col items-center">
-<span class="text-3xl font-bold font-headline text-on-primary mb-1">98%</span>
+<span class="text-3xl font-bold font-headline text-on-primary mb-1">95%</span>
 <span class="text-sm font-label text-primary-fixed-dim uppercase tracking-wider">Return Rate</span>
 </div>
 <div class="flex flex-col items-center">
-<span class="text-3xl font-bold font-headline text-on-primary mb-1">500+</span>
-<span class="text-sm font-label text-primary-fixed-dim uppercase tracking-wider">Active Communities</span>
+<span class="text-3xl font-bold font-headline text-on-primary mb-1">25+</span>
+<span class="text-sm font-label text-primary-fixed-dim uppercase tracking-wider">Departments</span>
 </div>
 </div>
 </div>
@@ -140,20 +140,21 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.06)] p-4 flex flex-col md:flex-row gap-4 items-center">
 <div class="flex-1 flex items-center bg-surface-container-low rounded-DEFAULT px-4 py-3 w-full">
 <span class="material-symbols-outlined text-outline mr-3">search</span>
-<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="What are you looking for?" type="text"/>
+<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="Search for items (e.g., ID Card, Wallet)..." type="text"/>
 </div>
 <div class="w-full md:w-48 flex items-center bg-surface-container-low rounded-DEFAULT px-4 py-3">
 <span class="material-symbols-outlined text-outline mr-3">category</span>
 <select class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body outline-none appearance-none cursor-pointer">
 <option>All Categories</option>
 <option>Electronics</option>
-<option>Pets</option>
-<option>Accessories</option>
+<option>Wallets & IDs</option>
+<option>Books & Notes</option>
+<option>Keys</option>
 </select>
 </div>
 <div class="w-full md:w-56 flex items-center bg-surface-container-low rounded-DEFAULT px-4 py-3">
 <span class="material-symbols-outlined text-outline mr-3">location_on</span>
-<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="Location..." type="text"/>
+<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="e.g., Abeda Inamdar College" type="text"/>
 </div>
 <button class="w-full md:w-auto bg-primary-container text-on-primary px-8 py-3 rounded-DEFAULT font-label font-bold hover:bg-primary-container/90 transition-colors shrink-0">
                     Search
@@ -187,7 +188,7 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $themeLineClass = $isLost ? 'bg-[#F4A261]' : 'bg-secondary';
         $iconName = $isLost ? 'campaign' : 'check_circle';
         
-        $imagePath = !empty($item['primary_image']) ? preg_replace('/^\.\.\//', '', $item['primary_image']) : '/assets/img/placeholder.jpg';
+        $imagePath = !empty($item['primary_image']) ? ltrim($item['primary_image'], '/') : '/assets/img/placeholder.jpg';
     ?>
     <div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_8px_32px_rgba(13,27,42,0.06)] transition-all duration-300" onclick="window.location.href='item-detail.php?id=<?= $item['item_id'] ?>'">
         <!-- Accent Line -->

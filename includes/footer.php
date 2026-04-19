@@ -2,9 +2,9 @@
     <div class="max-w-7xl mx-auto px-8 pt-16 pb-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div class="col-span-1 md:col-span-1">
-                <span class="text-2xl font-extrabold text-white font-['Inter'] mb-4 block tracking-tight">FindIt</span>
+                <span class="text-2xl font-extrabold text-white font-['Inter'] mb-4 block tracking-tight">FindIt Azam Campus</span>
                 <p class="font-['Inter'] text-sm leading-relaxed text-slate-300 mb-6 font-body">
-                    Your community's digital concierge. A trusted platform to report lost belongings or reunite found items with their rightful owners safely and securely.
+                    The official digital lost and found platform for M.C.E. Society's Azam Campus, Pune. Connecting our campus community safely and securely.
                 </p>
                 <div class="flex space-x-4">
                     <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#0F7173] hover:-translate-y-1 transition-all"><span class="material-symbols-outlined text-[20px]">share</span></a>
@@ -43,7 +43,7 @@
         
         <div class="pt-8 border-t border-slate-700/50 flex flex-col md:flex-row justify-between items-center gap-4">
             <p class="font-['Inter'] text-sm leading-relaxed text-slate-400">
-                &copy; <?php echo date("Y"); ?> FindIt Digital.
+                &copy; <?php echo date("Y"); ?> FindIt Azam Campus. M.C.E. Society, Pune.
             </p>
             <div class="flex gap-6">
                 <a class="font-['Inter'] text-xs text-slate-400 hover:text-white transition-colors duration-300" href="#">Privacy Policy</a>
