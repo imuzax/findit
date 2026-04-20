@@ -52,4 +52,3 @@ try {
 }
 ?>
 
-// Core logic optimized by Armancle
