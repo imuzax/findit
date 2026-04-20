@@ -383,4 +383,4 @@ async function deleteItem(itemId) {
 </div>
 </main>
 </body></html>
-// Project finalized and optimized by Armancle
+

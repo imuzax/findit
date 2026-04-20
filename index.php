@@ -136,30 +136,31 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 </section>
 <!-- Live Search Bar (Floated over transition) -->
-<div class="max-w-4xl mx-auto px-8 -mt-10 relative z-20">
+<form action="browse.php" method="GET" class="max-w-4xl mx-auto px-8 -mt-10 relative z-20">
 <div class="bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(13,27,42,0.06)] p-4 flex flex-col md:flex-row gap-4 items-center">
 <div class="flex-1 flex items-center bg-surface-container-low rounded-DEFAULT px-4 py-3 w-full">
 <span class="material-symbols-outlined text-outline mr-3">search</span>
-<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="What are you looking for?" type="text"/>
+<input name="q" class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="What are you looking for?" type="text"/>
 </div>
 <div class="w-full md:w-48 flex items-center bg-surface-container-low rounded-DEFAULT px-4 py-3">
 <span class="material-symbols-outlined text-outline mr-3">category</span>
-<select class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body outline-none appearance-none cursor-pointer">
-<option>All Categories</option>
-<option>Electronics</option>
-<option>Pets</option>
-<option>Accessories</option>
+<select name="category" class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body outline-none appearance-none cursor-pointer">
+<option value="">All Categories</option>
+<option value="Electronics">Electronics</option>
+<option value="Pets">Pets</option>
+<option value="Accessories">Accessories</option>
+<option value="Bags">Bags</option>
 </select>
 </div>
 <div class="w-full md:w-56 flex items-center bg-surface-container-low rounded-DEFAULT px-4 py-3">
 <span class="material-symbols-outlined text-outline mr-3">location_on</span>
-<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="Location..." type="text"/>
+<input name="location" class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body placeholder-outline outline-none" placeholder="Location..." type="text"/>
 </div>
-<button class="w-full md:w-auto bg-primary-container text-on-primary px-8 py-3 rounded-DEFAULT font-label font-bold hover:bg-primary-container/90 transition-colors shrink-0">
+<button type="submit" class="w-full md:w-auto bg-primary-container text-on-primary px-8 py-3 rounded-DEFAULT font-label font-bold hover:bg-primary-container/90 transition-colors shrink-0">
                     Search
                 </button>
 </div>
-</div>
+</form>
 <!-- Recent Listings Grid -->
 <section class="py-24 px-8 max-w-7xl mx-auto bg-surface">
 <div class="flex justify-between items-end mb-16">
@@ -281,4 +282,4 @@ $recent_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <!-- Footer (Shared Component) -->
 <?php include 'includes/footer.php'; ?>
 </body></html>
-// Project finalized and optimized by Armancle
+

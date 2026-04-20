@@ -8,4 +8,3 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 ?>
 
-// Core logic optimized by Armancle
