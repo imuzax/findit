@@ -5,6 +5,7 @@ require_once 'includes/config.php';
 $search = isset($_GET['q']) ? trim($_GET['q']) : '';
 $type = isset($_GET['type']) ? $_GET['type'] : '';
 $category = isset($_GET['category']) ? $_GET['category'] : '';
+$location = isset($_GET['location']) ? trim($_GET['location']) : '';
 
 $queryParams = [];
 $sql = "SELECT i.*, 
@@ -21,8 +22,14 @@ if (!empty($category)) {
     $queryParams[] = $category;
 }
 
+if (!empty($location)) {
+    $sql .= " AND i.location_text LIKE ?";
+    $queryParams[] = "%$location%";
+}
+
 if (!empty($search)) {
-    $sql .= " AND (i.title LIKE ? OR i.description LIKE ?)";
+    $sql .= " AND (i.title LIKE ? OR i.description LIKE ? OR i.location_text LIKE ?)";
+    $queryParams[] = "%$search%";
     $queryParams[] = "%$search%";
     $queryParams[] = "%$search%";
 }
