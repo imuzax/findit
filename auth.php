@@ -318,4 +318,4 @@ async function handleRegister(e) {
 </div>
 </div>
 </body></html>
-// Project finalized and optimized by Armancle
+

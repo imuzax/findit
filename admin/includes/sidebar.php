@@ -31,4 +31,3 @@
     </div>
 </aside>
 
-// Core logic optimized by Armancle
